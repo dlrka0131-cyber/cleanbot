@@ -147,8 +147,8 @@
     padding: 7px 8px 7px 14px; border-radius: 999px;
     background: #fff; border: 2px solid var(--ink); box-shadow: 2px 2px 0 var(--ink);
     font-size: 1.1rem; font-weight: 800;
-    animation: pop .2s ease-out;
   }
+  .chip.new { animation: pop .25s ease-out; }   /* 방금 넣은 단어만 톡 튀어나와요 */
   .chip button { width: 24px; height: 24px; border-radius: 50%; border: none; background: var(--cream); font-size: .75rem; font-weight: 900; }
   .chip button:hover { background: var(--coral); color: #fff; }
   @keyframes pop { from { transform: scale(.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
@@ -607,19 +607,21 @@
   });
 
   /* ───────── 1. 단어 바구니 ───────── */
-  function renderWords() {
-    for (const kind of ['good', 'bad']) {
+  // kind를 주면 그 바구니만 다시 그려요 (착한 말 칸에 넣으면 착한 말 바구니만 반응)
+  function renderWords(kind, fresh = -1) {
+    if (!kind) { renderWords('good'); renderWords('bad'); return; }
+    {
       const box = $(kind + 'Chips');
       const list = S[kind];
       $(kind + 'Cnt').textContent = list.length + '개';
       box.innerHTML = list.length ? '' : `<span class="empty">아직 비어 있어요. 위에 단어를 써서 넣어 보세요.</span>`;
       list.forEach((w, i) => {
         const c = document.createElement('span');
-        c.className = 'chip';
+        c.className = i === fresh ? 'chip new' : 'chip';
         c.innerHTML = `${esc(w)} <button type="button" aria-label="${esc(w)} 빼기" title="빼기">✕</button>`;
         c.querySelector('button').addEventListener('click', () => {
           S[kind].splice(i, 1);
-          save(); renderWords(); renderSteps();
+          save(); renderWords(kind); renderSteps();
         });
         box.appendChild(c);
       });
@@ -635,7 +637,7 @@
       return false;
     }
     S[kind].push(w);
-    save(); renderWords(); renderSteps();
+    save(); renderWords(kind, S[kind].length - 1); renderSteps();
     return true;
   }
   document.querySelectorAll('form.add').forEach(f => f.addEventListener('submit', e => {
@@ -852,7 +854,7 @@
         if (!S[kind].some(x => norm(x) === norm(w))) S[kind].push(w);
         // 대화 중에 가르친 단어는 바로 배워요
         if (!S.learned[kind].some(x => norm(x) === norm(w))) S.learned[kind].push(w);
-        save(); renderWords();
+        save(); renderWords(kind, S[kind].indexOf(w));
         resolve({ word: w, kind });
       };
       b.querySelector('.tg').onclick = () => pick('good');
