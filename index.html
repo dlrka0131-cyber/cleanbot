@@ -1,0 +1,973 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>인공지능 클린봇 만들기</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css">
+
+<style>
+  :root {
+    --ink: #0f2f3a;
+    --ink-soft: #2f5560;
+    --muted: #5b7d86;
+    --card: #ffffff;
+    --line: #cdeee8;
+    --field: #f2fbf9;
+    --violet: #0d9488;
+    --violet-soft: #ccfbf1;
+    --good: #16a34a;
+    --good-bg: #e8f8ef;
+    --good-line: #b5e6c8;
+    --good-ink: #166534;
+    --bad: #e11d48;
+    --bad-bg: #ffeef2;
+    --bad-line: #fbc4d1;
+    --bad-ink: #9f1239;
+    --shadow: 0 2px 4px rgba(15,47,58,.06), 0 16px 40px rgba(13,94,89,.18);
+  }
+
+  * { box-sizing: border-box; }
+  html { font-size: 18px; }
+  html, body { margin: 0; }
+
+  body {
+    min-height: 100vh;
+    font-family: "Pretendard", -apple-system, "Malgun Gothic", sans-serif;
+    color: var(--ink);
+    background:
+      radial-gradient(800px 500px at 0% 0%, #8fe8d6 0%, transparent 60%),
+      radial-gradient(800px 500px at 100% 0%, #9fd3f7 0%, transparent 60%),
+      radial-gradient(900px 600px at 0% 80%, #f7e58f 0%, transparent 60%),
+      radial-gradient(900px 600px at 100% 100%, #a6e9f2 0%, transparent 60%),
+      #a9e0d6;
+    padding: 16px clamp(16px, 2.5vw, 40px) 40px;
+  }
+
+  button { font: inherit; cursor: pointer; }
+  button:disabled { cursor: not-allowed; }
+
+  /* ── 머리말 ── */
+  .hero {
+    position: relative;
+    display: flex; align-items: center; justify-content: center; flex-wrap: wrap;
+    gap: 10px 16px;
+    margin-bottom: 14px;
+  }
+  .hero .tag {
+    padding: 8px 16px; border-radius: 999px;
+    background: rgba(255,255,255,.85);
+    font-size: 1.05rem; font-weight: 800; color: #0f766e;
+  }
+  .hero h1 {
+    margin: 0;
+    font-weight: 900;
+    font-size: clamp(2rem, 3.2vw, 2.9rem);
+    letter-spacing: -0.03em;
+  }
+  .hero h1 .hl {
+    color: #0f766e;
+    background: linear-gradient(transparent 62%, #fde68a 62%, #fde68a 92%, transparent 92%);
+    padding: 0 .08em;
+  }
+  .reset {
+    padding: 8px 14px; border-radius: 999px;
+    border: 2px solid rgba(255,255,255,.9);
+    background: rgba(255,255,255,.6);
+    font-size: .9rem; font-weight: 800; color: var(--ink-soft);
+  }
+  .reset:hover { background: #fff; }
+  @media (min-width: 1100px) {
+    .reset { position: absolute; right: 0; top: 50%; transform: translateY(-50%); }
+  }
+
+  /* ── 단계 표시 ── */
+  .steps {
+    display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;
+    margin-bottom: 14px;
+  }
+  .steps button {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 18px;
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background: rgba(255,255,255,.6);
+    color: var(--ink-soft);
+    font-size: 1rem; font-weight: 800;
+  }
+  .steps button .n {
+    width: 26px; height: 26px; border-radius: 50%;
+    display: grid; place-items: center;
+    background: #fff; font-size: .85rem;
+  }
+  .steps button.on { background: #fff; border-color: #5eead4; color: #115e59; box-shadow: 0 6px 16px rgba(13,148,136,.2); }
+  .steps button.on .n { background: #0d9488; color: #fff; }
+  .steps button.done .n { background: #bbf7d0; color: var(--good-ink); }
+  .steps button:disabled { opacity: .55; }
+  .steps .lock { background: rgba(255,255,255,.4); }
+
+  /* ── 카드 ── */
+  .panel { display: none; }
+  .panel.on { display: block; animation: fade .25s ease-out; }
+  @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  .card {
+    background: var(--card);
+    border-radius: 28px;
+    box-shadow: var(--shadow);
+    padding: 24px 26px;
+  }
+  .card-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+  .card-head h2 { margin: 0; font-size: 1.55rem; font-weight: 900; letter-spacing: -0.02em; }
+  .card-head p { margin: 4px 0 0; color: var(--ink-soft); font-size: 1rem; font-weight: 600; }
+  .card-head .sp { flex: 1; }
+
+  .big-btn {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    width: 100%;
+    margin-top: 16px;
+    padding: 17px;
+    border: none; border-radius: 18px;
+    font-size: 1.35rem; font-weight: 900;
+    color: #134e4a;
+    background: linear-gradient(90deg, #5eead4, #7dd3fc 55%, #fde68a);
+    box-shadow: 0 10px 24px rgba(45,212,191,.3);
+    transition: transform .12s, box-shadow .12s, opacity .2s;
+  }
+  .big-btn:hover:not(:disabled) { transform: translateY(-2px); }
+  .big-btn:disabled { opacity: .45; box-shadow: none; }
+
+  .ghost {
+    padding: 12px 18px; border-radius: 14px;
+    border: 2px solid var(--line); background: #fff;
+    color: var(--ink-soft); font-size: 1rem; font-weight: 800;
+  }
+  .ghost:hover { border-color: #5eead4; color: #115e59; }
+
+  /* ── 1. 단어 바구니 ── */
+  .baskets { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; }
+  .basket { border-radius: 22px; padding: 18px; border: 2px solid; display: flex; flex-direction: column; }
+  .basket.good { background: var(--good-bg); border-color: var(--good-line); }
+  .basket.bad { background: var(--bad-bg); border-color: var(--bad-line); }
+  .basket h3 { margin: 0 0 12px; font-size: 1.35rem; font-weight: 900; display: flex; align-items: center; gap: 8px; }
+  .basket.good h3 { color: var(--good-ink); }
+  .basket.bad h3 { color: var(--bad-ink); }
+  .basket h3 .cnt { margin-left: auto; font-size: .95rem; padding: 4px 12px; border-radius: 999px; background: #fff; }
+
+  .add { display: flex; gap: 8px; }
+  .add input {
+    flex: 1; min-width: 0; width: 100%;
+    font: inherit; font-size: 1.15rem; font-weight: 700;
+    padding: 12px 14px;
+    border-radius: 14px; border: 2px solid #fff; background: #fff; color: var(--ink);
+  }
+  .add input::placeholder { color: #6f9aa2; font-weight: 600; }
+  .add input:focus { outline: none; border-color: #5eead4; }
+  .add button { padding: 0 20px; border: none; border-radius: 14px; font-size: 1.1rem; font-weight: 900; color: #fff; }
+  .good .add button { background: #22c55e; }
+  .bad .add button { background: #f43f5e; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; min-height: 120px; align-content: flex-start; }
+  .chips .empty { color: var(--muted); font-weight: 600; font-size: .95rem; padding: 8px 4px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 8px 8px 14px; border-radius: 999px;
+    background: #fff; font-size: 1.1rem; font-weight: 800;
+    animation: pop .2s ease-out;
+  }
+  .good .chip { color: var(--good-ink); border: 2px solid var(--good-line); }
+  .bad .chip { color: var(--bad-ink); border: 2px solid var(--bad-line); }
+  .chip button {
+    width: 24px; height: 24px; border-radius: 50%; border: none;
+    background: rgba(0,0,0,.06); color: inherit; font-size: .8rem; font-weight: 900;
+  }
+  .chip button:hover { background: rgba(0,0,0,.14); }
+  @keyframes pop { from { transform: scale(.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+  .hint { margin-top: 14px; }
+  .hint summary { cursor: pointer; font-weight: 800; color: var(--ink-soft); font-size: .95rem; }
+  .hint p { margin: 8px 0 0; color: var(--ink-soft); font-size: .95rem; line-height: 1.7; }
+
+  /* ── 2. 학습시키기 ── */
+  .train { text-align: center; padding: 10px 0 4px; }
+  .brain { font-size: 5rem; line-height: 1; display: inline-block; }
+  .brain.think { animation: think .6s ease-in-out infinite alternate; }
+  @keyframes think { from { transform: scale(1) rotate(-6deg); } to { transform: scale(1.12) rotate(6deg); } }
+  .train .sum { margin: 14px 0 4px; font-size: 1.3rem; font-weight: 800; }
+  .train .sum b.g { color: var(--good); }
+  .train .sum b.b { color: var(--bad); }
+  .train .msg { min-height: 1.6em; color: var(--ink-soft); font-weight: 700; font-size: 1.1rem; }
+  .bar { height: 22px; border-radius: 999px; background: var(--field); border: 2px solid var(--line); overflow: hidden; margin: 18px auto 0; max-width: 720px; }
+  .bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #5eead4, #7dd3fc, #fde68a); transition: width .2s; }
+  .train .warn { margin-top: 12px; color: var(--bad-ink); font-weight: 800; }
+
+  /* ── 3. 대화하기 ── */
+  .chat {
+    height: min(52vh, 560px);
+    min-height: 280px;
+    overflow-y: auto;
+    padding: 6px 4px 6px;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .row { display: flex; gap: 10px; align-items: flex-end; max-width: 82%; }
+  .row.me { align-self: flex-end; flex-direction: row-reverse; }
+  .ava { flex: none; width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; font-size: 1.6rem; background: var(--violet-soft); }
+  .me .ava { background: #dbeafe; }
+  .bubble {
+    padding: 13px 17px; border-radius: 20px;
+    font-size: 1.2rem; font-weight: 700; line-height: 1.5;
+    background: #e6fffa; color: var(--ink);
+    border-bottom-left-radius: 6px;
+    animation: pop .2s ease-out;
+    white-space: pre-wrap; word-break: break-word;
+  }
+  .me .bubble { background: #e0efff; border-bottom-left-radius: 20px; border-bottom-right-radius: 6px; }
+  .bubble.q { font-size: 1.3rem; font-weight: 800; }
+  .bubble.ok { background: var(--good-bg); border: 2px solid var(--good-line); color: var(--good-ink); }
+  .bubble.no { background: var(--bad-bg); border: 2px solid var(--bad-line); color: var(--bad-ink); }
+  .bubble.unk { background: #fff8e1; border: 2px solid #fde68a; color: #854d0e; }
+  mark { padding: 0 3px; border-radius: 6px; }
+  mark.g { background: #bbf7d0; color: var(--good-ink); }
+  mark.b { background: #fecdd3; color: var(--bad-ink); }
+  .me .bubble.passed { box-shadow: 0 0 0 3px #86efac; }
+  .me .bubble.deleting { animation: shake .4s; text-decoration: line-through; text-decoration-color: var(--bad); text-decoration-thickness: 3px; }
+  .me .bubble.deleted { background: #eef6f5; color: #6f9aa2; font-weight: 700; font-size: 1.05rem; text-decoration: none; animation: fade .3s; }
+  @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+
+  .teach { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
+  .teach input {
+    font: inherit; font-size: 1.05rem; font-weight: 700;
+    padding: 9px 12px; border-radius: 12px; border: 2px solid #fde68a; background: #fff; color: var(--ink);
+    min-width: 0; width: 180px;
+  }
+  .teach button { padding: 9px 14px; border-radius: 12px; border: none; font-size: 1rem; font-weight: 900; }
+  .teach .tg { background: #22c55e; color: #fff; }
+  .teach .tb { background: #f43f5e; color: #fff; }
+  .teach .ts { background: #fff; color: var(--ink-soft); border: 2px solid #fde68a; }
+
+  .say { display: flex; gap: 10px; margin-top: 14px; }
+  .say input {
+    flex: 1; min-width: 0;
+    font: inherit; font-size: 1.25rem; font-weight: 700;
+    padding: 15px 18px; border-radius: 18px;
+    border: 2px solid #b9d8f7; background: #e6f3ff; color: var(--ink);
+  }
+  .say input::placeholder { color: #5f8a93; font-weight: 600; }
+  .say input:focus { outline: none; border-color: #93c5fd; background: #fff; }
+  .say button {
+    padding: 0 28px; border-radius: 18px; border: none;
+    font-size: 1.25rem; font-weight: 900;
+    background: #bfdbfe; color: #1e3a8a;
+  }
+  .say button:disabled, .say input:disabled { opacity: .5; }
+  .progress { font-weight: 800; color: #115e59; background: var(--violet-soft); padding: 6px 14px; border-radius: 999px; }
+
+  /* ── 4. 결과 ── */
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .stat { border-radius: 20px; padding: 18px; text-align: center; border: 2px solid; }
+  .stat b { display: block; font-size: 2.6rem; font-weight: 900; line-height: 1.1; }
+  .stat span { font-size: 1.05rem; font-weight: 800; }
+  .stat.s1 { background: var(--good-bg); border-color: var(--good-line); color: var(--good-ink); }
+  .stat.s2 { background: var(--bad-bg); border-color: var(--bad-line); color: var(--bad-ink); }
+  .stat.s3 { background: #fff8e1; border-color: #fde68a; color: #854d0e; }
+
+  .log { margin-top: 18px; display: grid; gap: 8px; }
+  .log-row {
+    display: grid; grid-template-columns: 1.2fr 1fr auto; gap: 12px; align-items: center;
+    padding: 12px 16px; border-radius: 16px; background: var(--field); font-size: 1.05rem;
+  }
+  .log-row .lq { color: var(--ink-soft); font-weight: 700; }
+  .log-row .la { font-weight: 800; }
+  .badge { padding: 5px 12px; border-radius: 999px; font-weight: 900; font-size: .95rem; white-space: nowrap; }
+  .badge.ok { background: #bbf7d0; color: var(--good-ink); }
+  .badge.no { background: #fecdd3; color: var(--bad-ink); }
+  .badge.unk { background: #fde68a; color: #854d0e; }
+
+  .think-box { margin-top: 18px; padding: 16px 20px; border-radius: 18px; background: #fff7ed; color: #7c2d12; line-height: 1.7; font-size: 1.05rem; }
+  .think-box h3 { margin: 0 0 4px; font-size: 1.1rem; }
+  .think-box ul { margin: 0; padding-left: 22px; }
+
+  .actions { display: flex; gap: 12px; margin-top: 18px; flex-wrap: wrap; }
+  .actions > * { flex: 1; min-width: 220px; margin-top: 0; }
+
+  /* ── 질문 만들기 ── */
+  .qlist { display: grid; gap: 10px; }
+  .qrow { display: flex; gap: 10px; align-items: center; }
+  .qrow .qn { flex: none; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--violet-soft); color: #115e59; font-weight: 900; }
+  .qrow input {
+    flex: 1; min-width: 0;
+    font: inherit; font-size: 1.15rem; font-weight: 700;
+    padding: 12px 14px; border-radius: 14px;
+    border: 2px solid #99f6e4; background: #e6fffa; color: var(--ink);
+  }
+  .qrow input:focus { outline: none; border-color: #2dd4bf; background: #fff; }
+  .qrow button { flex: none; width: 44px; height: 44px; border-radius: 12px; border: 2px solid var(--line); background: #fff; font-size: 1.1rem; }
+  .qrow button:hover { border-color: var(--bad-line); background: var(--bad-bg); }
+  .qtools { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+
+  /* ── 안내 창 ── */
+  .modal {
+    position: fixed; inset: 0; z-index: 20;
+    display: grid; place-items: center; padding: 16px;
+    background: rgba(30,27,75,.45); backdrop-filter: blur(3px);
+  }
+  .modal[hidden] { display: none; }
+  .modal-card {
+    width: min(480px, 100%);
+    background: #fff; border-radius: 28px;
+    padding: 32px 28px 24px; text-align: center;
+    box-shadow: 0 24px 60px rgba(30,27,75,.35);
+    border-top: 8px solid #fde68a;
+    animation: pop .25s ease-out;
+  }
+  .modal-card .emo { font-size: 3.4rem; line-height: 1; }
+  .modal-card h2 { margin: 12px 0 8px; font-size: 1.8rem; font-weight: 900; color: #115e59; }
+  .modal-card p { margin: 0 0 22px; font-size: 1.15rem; font-weight: 700; line-height: 1.6; color: var(--ink-soft); }
+  .modal-card .row2 { display: flex; gap: 10px; }
+  .modal-card .row2 button { flex: 1; padding: 14px; border-radius: 16px; border: none; font-size: 1.15rem; font-weight: 900; }
+  .modal-card .ok { background: #99f6e4; color: #134e4a; }
+  .modal-card .cancel { background: #eef6f5; color: var(--ink-soft); }
+
+  .toast {
+    position: fixed; bottom: 24px; left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--ink); color: #fff;
+    padding: 11px 20px; border-radius: 999px;
+    font-size: 1rem; font-weight: 700;
+    opacity: 0; pointer-events: none;
+    transition: opacity .25s, transform .25s; z-index: 30;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  @media (max-width: 760px) {
+    html { font-size: 16px; }
+    .baskets, .stats { grid-template-columns: minmax(0, 1fr); }
+    .card { padding: 20px 16px; border-radius: 22px; }
+    .row { max-width: 94%; }
+    .log-row { grid-template-columns: 1fr; gap: 4px; }
+    .steps button { padding: 8px 12px; font-size: .9rem; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <span class="tag">🧠 내가 가르치는 인공지능</span>
+  <h1>인공지능 <span class="hl">클린봇</span> 만들기 🤖</h1>
+  <button class="reset" id="reset" type="button">🔄 처음부터 다시</button>
+</header>
+
+<nav class="steps" id="steps">
+  <button data-go="words"><span class="n">1</span>단어 가르치기</button>
+  <button data-go="train"><span class="n">2</span>학습시키기</button>
+  <button data-go="chat"><span class="n">3</span>대화하기</button>
+  <button data-go="result"><span class="n">4</span>결과 보기</button>
+  <button data-go="questions" class="lock" id="qTab"><span class="n">🔒</span>질문 만들기</button>
+</nav>
+
+<!-- 1. 단어 가르치기 -->
+<section class="panel" id="p-words">
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <h2>1. 클린봇에게 단어 가르치기</h2>
+        <p>처음 클린봇은 아무것도 몰라요. 착한 말과 나쁜 말을 바구니에 넣어 주세요.</p>
+      </div>
+    </div>
+    <div class="baskets">
+      <div class="basket good">
+        <h3>😊 착한 말 바구니 <span class="cnt" id="goodCnt">0개</span></h3>
+        <form class="add" data-kind="good">
+          <input type="text" maxlength="15" placeholder="착한 말을 써 보세요" aria-label="착한 말">
+          <button type="submit">넣기</button>
+        </form>
+        <div class="chips" id="goodChips"></div>
+      </div>
+      <div class="basket bad">
+        <h3>😠 나쁜 말 바구니 <span class="cnt" id="badCnt">0개</span></h3>
+        <form class="add" data-kind="bad">
+          <input type="text" maxlength="15" placeholder="나쁜 말을 써 보세요" aria-label="나쁜 말">
+          <button type="submit">넣기</button>
+        </form>
+        <div class="chips" id="badChips"></div>
+      </div>
+    </div>
+    <details class="hint">
+      <summary>💡 어떤 단어를 넣어야 할지 모르겠다면?</summary>
+      <p>클린봇이 할 질문을 떠올려 보세요. "요즘 학교생활 어떠니?", "오늘 급식 맛은 어땠어?" 같은 질문에 친구들이 뭐라고 대답할까요?<br>
+      그 대답 속에 들어 있는 <b>착한 말</b>과 <b>나쁜 말</b>을 바구니에 넣으면 돼요.</p>
+    </details>
+    <button class="big-btn" id="toTrain">다음: 학습시키러 가기 👉</button>
+  </div>
+</section>
+
+<!-- 2. 학습시키기 -->
+<section class="panel" id="p-train">
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <h2>2. 클린봇 학습시키기</h2>
+        <p>바구니의 단어로 클린봇을 학습시켜요. 학습한 단어로만 착한 말과 나쁜 말을 구별해요.</p>
+      </div>
+    </div>
+    <div class="train">
+      <div class="brain" id="brain">🤖</div>
+      <div class="sum" id="trainSum"></div>
+      <div class="bar"><i id="bar"></i></div>
+      <div class="msg" id="trainMsg"></div>
+      <div class="warn" id="trainWarn"></div>
+    </div>
+    <button class="big-btn" id="trainBtn">🧠 학습시키기</button>
+  </div>
+</section>
+
+<!-- 3. 대화하기 -->
+<section class="panel" id="p-chat">
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <h2>3. 클린봇과 대화하기</h2>
+        <p>클린봇의 질문에 대답해 보세요. 클린봇이 착한 말인지 나쁜 말인지 판단해요.</p>
+      </div>
+      <span class="sp"></span>
+      <span class="progress" id="progress"></span>
+    </div>
+    <div class="chat" id="chat" aria-live="polite"></div>
+    <form class="say" id="say">
+      <input type="text" id="answer" maxlength="60" placeholder="대답을 써 보세요" autocomplete="off" aria-label="대답">
+      <button type="submit" id="sendBtn">보내기</button>
+    </form>
+  </div>
+</section>
+
+<!-- 4. 결과 -->
+<section class="panel" id="p-result">
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <h2>4. 결과 보기</h2>
+        <p id="resultSub">클린봇이 대답을 어떻게 판단했는지 살펴봐요.</p>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat s1"><b id="nOk">0</b><span>✅ 통과 (착한 말)</span></div>
+      <div class="stat s2"><b id="nNo">0</b><span>🚨 삭제 (나쁜 말)</span></div>
+      <div class="stat s3"><b id="nUnk">0</b><span>🤔 모르는 말</span></div>
+    </div>
+    <div class="log" id="log"></div>
+    <div class="think-box">
+      <h3>🤔 생각해 보기</h3>
+      <ul>
+        <li>클린봇이 <b>잘못 판단한</b> 대답이 있었나요? 왜 그렇게 판단했을까요?</li>
+        <li>클린봇이 <b>모르는 말</b>이라고 한 대답은 왜 몰랐을까요?</li>
+        <li>친구의 클린봇은 같은 대답을 다르게 판단할까요? 왜 그럴까요?</li>
+      </ul>
+    </div>
+    <div class="actions">
+      <button class="ghost" id="again">🔁 같은 질문으로 다시 대화하기</button>
+      <button class="ghost" id="moreWords">📝 단어 더 가르치기</button>
+      <button class="big-btn" id="toQuestions">✏️ 질문 직접 만들기</button>
+    </div>
+  </div>
+</section>
+
+<!-- 질문 만들기 -->
+<section class="panel" id="p-questions">
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <h2>✏️ 나만의 질문 만들기</h2>
+        <p>클린봇이 할 질문을 고치거나 새로 만들어 보세요. 질문에 맞는 단어도 바구니에 꼭 가르쳐 주세요!</p>
+      </div>
+    </div>
+    <div class="qlist" id="qlist"></div>
+    <div class="qtools">
+      <button class="ghost" id="addQ">➕ 질문 추가하기</button>
+      <button class="ghost" id="resetQ">↩️ 기본 질문으로 되돌리기</button>
+    </div>
+    <div class="actions">
+      <button class="ghost" id="qWords">📝 질문에 맞는 단어 가르치기</button>
+      <button class="big-btn" id="qStart">💬 내 질문으로 대화하기</button>
+    </div>
+  </div>
+</section>
+
+<div class="modal" id="modal" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+    <div class="emo" id="mEmo"></div>
+    <h2 id="mTitle"></h2>
+    <p id="mText"></p>
+    <div class="row2">
+      <button class="cancel" id="mCancel">취소</button>
+      <button class="ok" id="mOk">확인</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const DEFAULT_QUESTIONS = [
+    '요즘 학교생활 어떠니?',
+    '오늘 급식 맛은 어땠어?',
+    '친구가 장난을 치면 뭐라고 말할래?',
+    '숙제가 많을 때 기분이 어때?',
+    '체육 경기에서 졌을 때 친구에게 뭐라고 할래?',
+    '친구가 나를 도와주면 뭐라고 말할래?',
+    '모둠 활동에서 친구가 실수하면 뭐라고 할래?',
+    '친구가 새 옷을 입고 왔어. 뭐라고 말해 줄래?',
+    '친구가 상을 받았어. 뭐라고 말해 줄래?',
+    '친구가 "미안해"라고 사과하면 뭐라고 할래?',
+  ];
+  const MAX_Q = 15;
+  const KEY = 'cleanbot-v1';
+
+  const $ = id => document.getElementById(id);
+
+  /* ───────── 상태 (이 컴퓨터에만 저장) ───────── */
+  const fresh = () => ({
+    good: [], bad: [],          // 바구니
+    learned: null,              // 학습한 단어 { good, bad } — 학습시키기를 눌러야 바뀌어요
+    unlocked: false,            // 1라운드를 끝내면 질문 만들기가 열려요
+    questions: [...DEFAULT_QUESTIONS],
+    round: null,                // 지금 대화 { qs, i, log }
+    lastLog: null,
+    panel: 'words',
+  });
+  let S = load();
+
+  function load() {
+    try {
+      const v = JSON.parse(localStorage.getItem(KEY));
+      if (v && Array.isArray(v.good)) return { ...fresh(), ...v };
+    } catch (e) {}
+    return fresh();
+  }
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {}
+  }
+
+  function toast(msg) {
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toast.timer);
+    toast.timer = setTimeout(() => t.classList.remove('show'), 2000);
+  }
+
+  function ask({ emo, title, text, ok = '확인', cancel = null }) {
+    return new Promise(resolve => {
+      $('mEmo').textContent = emo;
+      $('mTitle').textContent = title;
+      $('mText').innerHTML = text;
+      $('mOk').textContent = ok;
+      $('mCancel').hidden = !cancel;
+      if (cancel) $('mCancel').textContent = cancel;
+      $('modal').hidden = false;
+      $('mOk').focus();
+      const done = v => { $('modal').hidden = true; $('mOk').onclick = $('mCancel').onclick = null; resolve(v); };
+      $('mOk').onclick = () => done(true);
+      $('mCancel').onclick = () => done(false);
+    });
+  }
+
+  const esc = s => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  // 띄어쓰기는 무시하고 비교해요 ('짜증나' = '짜증 나')
+  const norm = s => s.replace(/\s+/g, '').toLowerCase();
+
+  /* ───────── 화면 이동 ───────── */
+  function canGo(p) {
+    if (p === 'chat') return !!S.learned;
+    if (p === 'result') return !!S.lastLog;
+    if (p === 'questions') return S.unlocked;
+    return true;
+  }
+  function show(p) {
+    if (!canGo(p)) return;
+    S.panel = p;
+    document.querySelectorAll('.panel').forEach(el => el.classList.toggle('on', el.id === 'p-' + p));
+    renderSteps();
+    if (p === 'train') renderTrain();
+    if (p === 'chat') renderChat();
+    if (p === 'result') renderResult();
+    if (p === 'questions') renderQuestions();
+    save();
+    window.scrollTo({ top: 0 });
+  }
+  function renderSteps() {
+    document.querySelectorAll('#steps button').forEach(b => {
+      const p = b.dataset.go;
+      b.classList.toggle('on', p === S.panel);
+      b.disabled = !canGo(p);
+    });
+    const done = { words: S.good.length && S.bad.length, train: !!S.learned, chat: !!S.lastLog, result: S.unlocked };
+    document.querySelectorAll('#steps button').forEach(b => b.classList.toggle('done', !!done[b.dataset.go] && b.dataset.go !== S.panel));
+    $('qTab').classList.toggle('lock', !S.unlocked);
+    $('qTab').querySelector('.n').textContent = S.unlocked ? '✏️' : '🔒';
+    $('qTab').title = S.unlocked ? '' : '대화를 한 번 끝까지 하면 열려요';
+  }
+  $('steps').addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (b) show(b.dataset.go);
+  });
+
+  /* ───────── 1. 단어 바구니 ───────── */
+  function renderWords() {
+    for (const kind of ['good', 'bad']) {
+      const box = $(kind + 'Chips');
+      const list = S[kind];
+      $(kind + 'Cnt').textContent = list.length + '개';
+      box.innerHTML = list.length ? '' : `<span class="empty">아직 비어 있어요. 위에 단어를 써서 넣어 보세요.</span>`;
+      list.forEach((w, i) => {
+        const c = document.createElement('span');
+        c.className = 'chip';
+        c.innerHTML = `${esc(w)} <button type="button" aria-label="${esc(w)} 빼기" title="빼기">✕</button>`;
+        c.querySelector('button').addEventListener('click', () => {
+          S[kind].splice(i, 1);
+          save(); renderWords(); renderSteps();
+        });
+        box.appendChild(c);
+      });
+    }
+  }
+  function addWord(kind, raw) {
+    const w = raw.trim().replace(/\s+/g, ' ');
+    if (!w) return false;
+    const other = kind === 'good' ? 'bad' : 'good';
+    if (S[kind].some(x => norm(x) === norm(w))) { toast(`'${w}'은(는) 이미 바구니에 있어요`); return false; }
+    if (S[other].some(x => norm(x) === norm(w))) {
+      toast(`'${w}'은(는) 이미 ${other === 'good' ? '착한 말' : '나쁜 말'} 바구니에 있어요`);
+      return false;
+    }
+    S[kind].push(w);
+    save(); renderWords(); renderSteps();
+    return true;
+  }
+  document.querySelectorAll('form.add').forEach(f => f.addEventListener('submit', e => {
+    e.preventDefault();
+    const input = f.querySelector('input');
+    if (addWord(f.dataset.kind, input.value)) input.value = '';
+    input.focus();
+  }));
+  $('toTrain').addEventListener('click', () => show('train'));
+
+  /* ───────── 2. 학습시키기 ───────── */
+  const sameWords = () => S.learned &&
+    JSON.stringify(S.learned.good) === JSON.stringify(S.good) &&
+    JSON.stringify(S.learned.bad) === JSON.stringify(S.bad);
+
+  function renderTrain() {
+    $('trainSum').innerHTML = `바구니에 착한 말 <b class="g">${S.good.length}개</b>, 나쁜 말 <b class="b">${S.bad.length}개</b>가 있어요.`;
+    $('bar').style.width = sameWords() ? '100%' : '0';
+    $('brain').textContent = sameWords() ? '😎' : '🤖';
+    $('trainMsg').textContent = sameWords() ? '학습 완료! 이제 대화할 수 있어요.' : '';
+    let warn = '';
+    if (!S.good.length || !S.bad.length) warn = '착한 말과 나쁜 말을 한 개 이상씩 넣어야 학습할 수 있어요.';
+    else if (S.learned && !sameWords()) warn = '바구니가 바뀌었어요! 새 단어를 배우려면 다시 학습시켜 주세요.';
+    $('trainWarn').textContent = warn;
+    $('trainBtn').disabled = !S.good.length || !S.bad.length;
+    $('trainBtn').textContent = sameWords() ? '💬 클린봇과 대화하러 가기' : (S.learned ? '🧠 다시 학습시키기' : '🧠 학습시키기');
+  }
+
+  let training = false;
+  $('trainBtn').addEventListener('click', async () => {
+    if (training) return;
+    if (sameWords()) return startRound();
+    training = true;
+    $('trainBtn').disabled = true;
+    $('trainWarn').textContent = '';
+    $('brain').textContent = '🤖';
+    $('brain').classList.add('think');
+    const steps = [
+      [15, '바구니의 단어를 읽는 중…'],
+      [40, `착한 말 ${S.good.length}개를 기억하는 중…`],
+      [70, `나쁜 말 ${S.bad.length}개를 기억하는 중…`],
+      [90, '착한 말과 나쁜 말을 구별하는 연습 중…'],
+      [100, '학습 완료!'],
+    ];
+    for (const [pct, msg] of steps) {
+      $('bar').style.width = pct + '%';
+      $('trainMsg').textContent = msg;
+      await new Promise(r => setTimeout(r, 650));
+    }
+    $('brain').classList.remove('think');
+    S.learned = { good: [...S.good], bad: [...S.bad] };
+    save();
+    training = false;
+    renderTrain(); renderSteps();
+    await ask({
+      emo: '😎', title: '학습 완료!',
+      text: `착한 말 <b>${S.good.length}개</b>, 나쁜 말 <b>${S.bad.length}개</b>를 배웠어요.<br>이제 클린봇과 대화해 볼까요?`,
+      ok: '💬 대화하러 가기',
+    });
+    startRound();
+  });
+
+  /* ───────── 3. 대화하기 ───────── */
+  // 대답 속에서 학습한 단어 찾기 — 나쁜 말이 하나라도 있으면 삭제
+  function judge(text) {
+    const t = norm(text);
+    const find = list => list.filter(w => norm(w) && t.includes(norm(w)));
+    const bad = find(S.learned.bad), good = find(S.learned.good);
+    return { verdict: bad.length ? 'no' : good.length ? 'ok' : 'unk', bad, good };
+  }
+  function highlight(text, bad, good) {
+    // 띄어쓰기를 무시하고 찾은 단어 위치에 색칠
+    const marks = new Array(text.length).fill(null);
+    const idx = [], compact = [];
+    [...text].forEach((ch, i) => { if (!/\s/.test(ch)) { idx.push(i); compact.push(ch.toLowerCase()); } });
+    const c = compact.join('');
+    const paint = (w, cls) => {
+      const n = norm(w); let from = 0, at;
+      while (n && (at = c.indexOf(n, from)) !== -1) {
+        for (let k = idx[at]; k <= idx[at + n.length - 1]; k++) if (!marks[k]) marks[k] = cls;
+        from = at + 1;
+      }
+    };
+    bad.forEach(w => paint(w, 'b'));
+    good.forEach(w => paint(w, 'g'));
+    let out = '', cur = null;
+    [...text].forEach((ch, i) => {
+      if (marks[i] !== cur) { if (cur) out += '</mark>'; if (marks[i]) out += `<mark class="${marks[i]}">`; cur = marks[i]; }
+      out += esc(ch);
+    });
+    if (cur) out += '</mark>';
+    return out;
+  }
+
+  function startRound(qs) {
+    const list = (qs || S.questions).map(q => q.trim()).filter(Boolean);
+    if (!list.length) { toast('질문이 하나도 없어요. 질문을 만들어 주세요'); return show('questions'); }
+    S.round = { qs: list, i: 0, log: [], custom: !!qs };
+    save();
+    show('chat');
+  }
+
+  const chat = $('chat');
+  function bubble(who, html, cls = '') {
+    const row = document.createElement('div');
+    row.className = 'row' + (who === 'me' ? ' me' : '');
+    row.innerHTML = `<div class="ava">${who === 'me' ? '🙋' : '🤖'}</div><div class="bubble ${cls}">${html}</div>`;
+    chat.appendChild(row);
+    chat.scrollTop = chat.scrollHeight;
+    return row.querySelector('.bubble');
+  }
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+
+  function setInput(on) {
+    $('answer').disabled = $('sendBtn').disabled = !on;
+    if (on) $('answer').focus();
+  }
+
+  function renderChat() {
+    if (!S.round) { S.round = { qs: [...S.questions], i: 0, log: [] }; }
+    chat.innerHTML = '';
+    // 이미 한 대화 다시 그리기
+    S.round.log.forEach(l => {
+      bubble('bot', esc(l.q), 'q');
+      if (l.verdict === 'no') bubble('me', '🧹 클린봇이 삭제한 대답이에요', 'deleted');
+      else bubble('me', highlight(l.a, l.bad, l.good), l.verdict === 'ok' ? 'passed' : '');
+      bubble('bot', resultText(l), l.verdict);
+    });
+    nextQuestion(true);
+  }
+
+  function resultText(l) {
+    const words = arr => arr.map(w => `'${esc(w)}'`).join(', ');
+    if (l.verdict === 'no') return `🚨 나쁜 말입니다. (${words(l.bad)} 발견)\n인공지능 클린봇이 나쁜 말을 삭제합니다.`;
+    if (l.verdict === 'ok') return `😊 착한 말이에요! (${words(l.good)} 발견)\n클린봇이 통과시켜요.`;
+    return l.taught
+      ? `🤔 모르는 말이었어요.\n'${esc(l.taught.word)}'을(를) ${l.taught.kind === 'good' ? '착한 말' : '나쁜 말'}로 새로 배웠어요!`
+      : '🤔 이 말은 아직 배우지 않아서 잘 모르겠어요.';
+  }
+
+  function updateProgress() {
+    const r = S.round;
+    $('progress').textContent = `질문 ${Math.min(r.i + 1, r.qs.length)} / ${r.qs.length}`;
+  }
+
+  let busy = false;
+  async function nextQuestion(redraw) {
+    const r = S.round;
+    updateProgress();
+    if (r.i >= r.qs.length) { setInput(false); return finishRound(); }
+    if (!redraw) await wait(500);
+    bubble('bot', esc(r.qs[r.i]), 'q');
+    setInput(true);
+  }
+
+  $('say').addEventListener('submit', async e => {
+    e.preventDefault();
+    if (busy) return;
+    const a = $('answer').value.trim();
+    if (!a) { $('answer').focus(); return; }
+    busy = true;
+    setInput(false);
+    $('answer').value = '';
+    const r = S.round;
+    const j = judge(a);
+    const l = { q: r.qs[r.i], a, ...j };
+    const mine = bubble('me', highlight(a, j.bad, j.good));
+    await wait(600);
+
+    if (j.verdict === 'no') {
+      bubble('bot', resultText(l), 'no');
+      await wait(900);
+      mine.classList.add('deleting');
+      await wait(900);
+      mine.className = 'bubble deleted';
+      mine.textContent = '🧹 클린봇이 삭제한 대답이에요';
+    } else if (j.verdict === 'ok') {
+      mine.classList.add('passed');
+      bubble('bot', resultText(l), 'ok');
+    } else {
+      l.taught = await teachUnknown(a);
+      if (l.taught) chat.lastElementChild.querySelector('.bubble').innerHTML = resultText(l);
+    }
+    r.log.push(l);
+    r.i++;
+    save();
+    busy = false;
+    nextQuestion();
+  });
+
+  // 모르는 말이면 그 자리에서 물어보고 배우기
+  function teachUnknown(answer) {
+    return new Promise(resolve => {
+      const b = bubble('bot', '', 'unk');
+      b.innerHTML = `🤔 이 말은 아직 배우지 않아서 잘 모르겠어요.\n어떤 단어를 착한 말이나 나쁜 말로 가르쳐 줄래요?
+        <div class="teach">
+          <input type="text" maxlength="15" value="${esc(answer.slice(0, 15))}" aria-label="가르칠 단어">
+          <button type="button" class="tg">😊 착한 말</button>
+          <button type="button" class="tb">😠 나쁜 말</button>
+          <button type="button" class="ts">그냥 넘어가기</button>
+        </div>`;
+      const input = b.querySelector('input');
+      input.focus(); input.select();
+      chat.scrollTop = chat.scrollHeight;
+      const pick = kind => {
+        if (!kind) { b.innerHTML = '🤔 이 말은 아직 배우지 않아서 잘 모르겠어요.'; return resolve(null); }
+        const w = input.value.trim().replace(/\s+/g, ' ');
+        if (!w) { toast('가르칠 단어를 써 주세요'); return input.focus(); }
+        const other = kind === 'good' ? 'bad' : 'good';
+        if (S[other].some(x => norm(x) === norm(w))) {
+          toast(`'${w}'은(는) 이미 ${other === 'good' ? '착한 말' : '나쁜 말'} 바구니에 있어요`);
+          return input.focus();
+        }
+        if (!S[kind].some(x => norm(x) === norm(w))) S[kind].push(w);
+        // 대화 중에 가르친 단어는 바로 배워요
+        if (!S.learned[kind].some(x => norm(x) === norm(w))) S.learned[kind].push(w);
+        save(); renderWords();
+        resolve({ word: w, kind });
+      };
+      b.querySelector('.tg').onclick = () => pick('good');
+      b.querySelector('.tb').onclick = () => pick('bad');
+      b.querySelector('.ts').onclick = () => pick(null);
+      input.addEventListener('keydown', e => { if (e.key === 'Enter') e.preventDefault(); });
+    });
+  }
+
+  async function finishRound() {
+    const r = S.round;
+    S.lastLog = r.log;
+    S.round = null;
+    const firstUnlock = !S.unlocked;
+    S.unlocked = true;
+    save();
+    await wait(600);
+    bubble('bot', '🎉 질문이 모두 끝났어요! 결과를 보러 갈까요?', 'q');
+    await wait(900);
+    show('result');
+    if (firstUnlock) {
+      await ask({
+        emo: '🎉', title: '질문 만들기가 열렸어요!',
+        text: '이제 클린봇이 할 질문을 <b>직접 고치고 만들</b> 수 있어요.<br>결과를 살펴본 다음 [✏️ 질문 직접 만들기]를 눌러 보세요.',
+      });
+    }
+  }
+
+  /* ───────── 4. 결과 ───────── */
+  function renderResult() {
+    const log = S.lastLog || [];
+    const n = v => log.filter(l => l.verdict === v).length;
+    $('nOk').textContent = n('ok');
+    $('nNo').textContent = n('no');
+    $('nUnk').textContent = n('unk');
+    $('log').innerHTML = log.map(l => `
+      <div class="log-row">
+        <span class="lq">🤖 ${esc(l.q)}</span>
+        <span class="la">🙋 ${highlight(l.a, l.bad, l.good)}</span>
+        <span class="badge ${l.verdict}">${{ ok: '✅ 통과', no: '🚨 삭제', unk: '🤔 모르는 말' }[l.verdict]}</span>
+      </div>`).join('');
+  }
+  $('again').addEventListener('click', () => {
+    if (!sameWords()) { toast('바구니가 바뀌었어요. 먼저 다시 학습시켜 주세요'); return show('train'); }
+    startRound();
+  });
+  $('moreWords').addEventListener('click', () => show('words'));
+  $('toQuestions').addEventListener('click', () => show('questions'));
+
+  /* ───────── 질문 만들기 ───────── */
+  function renderQuestions() {
+    const box = $('qlist');
+    box.innerHTML = '';
+    S.questions.forEach((q, i) => {
+      const row = document.createElement('div');
+      row.className = 'qrow';
+      row.innerHTML = `<span class="qn">${i + 1}</span>
+        <input type="text" maxlength="50" value="${esc(q)}" placeholder="클린봇이 할 질문을 써 보세요" aria-label="${i + 1}번 질문">
+        <button type="button" title="질문 지우기" aria-label="${i + 1}번 질문 지우기">🗑️</button>`;
+      row.querySelector('input').addEventListener('input', e => { S.questions[i] = e.target.value; save(); });
+      row.querySelector('button').addEventListener('click', () => {
+        if (S.questions.length <= 1) return toast('질문은 한 개 이상 있어야 해요');
+        S.questions.splice(i, 1); save(); renderQuestions();
+      });
+      box.appendChild(row);
+    });
+    $('addQ').disabled = S.questions.length >= MAX_Q;
+  }
+  $('addQ').addEventListener('click', () => {
+    if (S.questions.length >= MAX_Q) return;
+    S.questions.push('');
+    save(); renderQuestions();
+    const inputs = $('qlist').querySelectorAll('input');
+    inputs[inputs.length - 1].focus();
+  });
+  $('resetQ').addEventListener('click', async () => {
+    const ok = await ask({ emo: '↩️', title: '기본 질문으로 되돌릴까요?', text: '내가 고친 질문이 모두 처음 질문 10개로 돌아가요.', ok: '되돌리기', cancel: '취소' });
+    if (!ok) return;
+    S.questions = [...DEFAULT_QUESTIONS];
+    save(); renderQuestions();
+  });
+  $('qWords').addEventListener('click', () => show('words'));
+  $('qStart').addEventListener('click', () => {
+    const qs = S.questions.map(q => q.trim()).filter(Boolean);
+    if (!qs.length) return toast('질문을 하나 이상 써 주세요');
+    if (!sameWords()) { toast('바구니가 바뀌었어요. 먼저 다시 학습시켜 주세요'); return show('train'); }
+    startRound(qs);
+  });
+
+  /* ───────── 처음부터 다시 ───────── */
+  $('reset').addEventListener('click', async () => {
+    const ok = await ask({
+      emo: '🔄', title: '처음부터 다시 할까요?',
+      text: '바구니의 단어, 학습한 내용, 내가 만든 질문, 대화 결과가 <b>모두 지워져요.</b><br>다음 친구가 쓸 때 눌러 주세요.',
+      ok: '모두 지우기', cancel: '취소',
+    });
+    if (!ok) return;
+    S = fresh();
+    save();
+    renderWords();
+    show('words');
+  });
+
+  /* ───────── 시작 ───────── */
+  renderWords();
+  if (S.round && S.panel === 'chat') show('chat');
+  else show(canGo(S.panel) ? S.panel : 'words');
+</script>
+</body>
+</html>
