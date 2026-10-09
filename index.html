@@ -575,33 +575,48 @@
       ],
     },
     mom: {
-      name: '엄마', emoji: '👩', desc: '엄마의 잔소리 5개',
+      name: '엄마', emoji: '👩', desc: '엄마의 잔소리 10개',
       questions: [
         '게임 그만하고 숙제부터 해!',
         '방이 이게 뭐니? 얼른 치워!',
         '일찍 일어나야지, 지각하겠다!',
         '채소도 골고루 먹어야지!',
         '휴대폰 좀 그만 봐!',
+        '밥 먹을 때는 휴대폰 보지 마!',
+        '양치하고 자야지!',
+        '동생이랑 싸우지 좀 마!',
+        '학원 갈 시간이야, 빨리 준비해!',
+        '벗은 옷은 빨래 바구니에 넣어야지!',
       ],
     },
     teacher: {
-      name: '선생님', emoji: '🧑‍🏫', desc: '선생님의 잔소리 5개',
+      name: '선생님', emoji: '🧑‍🏫', desc: '선생님의 잔소리 10개',
       questions: [
         '복도에서 뛰면 안 돼요!',
         '수업 시간에 떠들지 마세요.',
         '준비물 또 안 가져왔니?',
         '숙제를 안 해 왔네요?',
         '친구랑 사이좋게 지내야죠.',
+        '글씨를 좀 더 바르게 써 볼까요?',
+        '쓰레기는 쓰레기통에 버려야죠.',
+        '발표할 때는 크게 말해 볼까요?',
+        '급식 남기지 말고 골고루 먹어요.',
+        '줄 설 때는 차례를 지켜야죠.',
       ],
     },
     friend: {
-      name: '친구', emoji: '🧒', desc: '친구의 잔소리 5개',
+      name: '친구', emoji: '🧒', desc: '친구의 잔소리 10개',
       questions: [
         '너 또 늦었어! 빨리 와!',
         '그거 그렇게 하는 거 아니야!',
         '내 지우개 말 안 하고 썼지?',
         '우리 팀 졌잖아, 좀 잘하지!',
         '같이 놀자니까 왜 안 와?',
+        '너 왜 내 말 무시해?',
+        '빌려 간 내 책 언제 돌려줄 거야?',
+        '너 때문에 선생님께 혼났잖아!',
+        '술래 좀 제대로 해!',
+        '비밀이라고 했는데 왜 말했어?',
       ],
     },
   };
@@ -631,7 +646,11 @@
       const v = JSON.parse(localStorage.getItem(KEY));
       if (v && Array.isArray(v.good)) {
         const s = { ...fresh(), ...v };
-        ORDER.forEach(k => { if (!Array.isArray(s.qsets[k])) s.qsets[k] = [...PARTNERS[k].questions]; });
+        ORDER.forEach(k => {
+          const q = s.qsets[k];
+          const oldDefault = q && q.length === 5 && q.every((x, i) => x === PARTNERS[k].questions[i]);
+          if (!Array.isArray(q) || oldDefault) s.qsets[k] = [...PARTNERS[k].questions];
+        });
         return s;
       }
     } catch (e) {}
