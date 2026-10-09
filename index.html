@@ -8,23 +8,24 @@
 
 <style>
   :root {
-    --ink: #0f2f3a;
-    --ink-soft: #2f5560;
-    --muted: #5b7d86;
+    --ink: #263042;
+    --ink-soft: #3d475a;
+    --muted: #6b7385;
+    --cream: #fff8dc;
     --card: #ffffff;
-    --line: #cdeee8;
-    --field: #f2fbf9;
-    --violet: #0d9488;
-    --violet-soft: #ccfbf1;
-    --good: #16a34a;
-    --good-bg: #e8f8ef;
-    --good-line: #b5e6c8;
-    --good-ink: #166534;
-    --bad: #e11d48;
-    --bad-bg: #ffeef2;
-    --bad-line: #fbc4d1;
-    --bad-ink: #9f1239;
-    --shadow: 0 2px 4px rgba(15,47,58,.06), 0 16px 40px rgba(13,94,89,.18);
+    --yellow: #fdd95a;
+    --yellow-soft: #fff3bf;
+    --mint: #ddf3e3;
+    --teal: #7bcfc8;
+    --teal-soft: #e3f6f4;
+    --coral: #f0735a;
+    --coral-soft: #ffe3dc;
+    --mustard: #b07d12;
+    --good-ink: #1d6b45;
+    --bad-ink: #b03a24;
+    --line: 2.5px solid var(--ink);
+    --sh: 4px 4px 0 var(--ink);
+    --sh-lg: 7px 7px 0 var(--ink);
   }
 
   * { box-sizing: border-box; }
@@ -35,298 +36,264 @@
     min-height: 100vh;
     font-family: "Pretendard", -apple-system, "Malgun Gothic", sans-serif;
     color: var(--ink);
-    background:
-      radial-gradient(800px 500px at 0% 0%, #8fe8d6 0%, transparent 60%),
-      radial-gradient(800px 500px at 100% 0%, #9fd3f7 0%, transparent 60%),
-      radial-gradient(900px 600px at 0% 80%, #f7e58f 0%, transparent 60%),
-      radial-gradient(900px 600px at 100% 100%, #a6e9f2 0%, transparent 60%),
-      #a9e0d6;
-    padding: 16px clamp(16px, 2.5vw, 40px) 40px;
+    background-color: var(--cream);
+    background-image: radial-gradient(#e8dcb0 1.2px, transparent 1.2px);
+    background-size: 20px 20px;
+    padding: 20px 16px 48px;
   }
+  .page { max-width: 1120px; margin: 0 auto; }
 
-  button { font: inherit; cursor: pointer; }
+  button { font: inherit; cursor: pointer; color: var(--ink); }
   button:disabled { cursor: not-allowed; }
 
+  /* 눌리는 스티커 버튼 공통 */
+  .pressable { border: var(--line); box-shadow: var(--sh); transition: transform .08s, box-shadow .08s; }
+  .pressable:hover:not(:disabled) { transform: translate(-1px, -1px); box-shadow: 5px 5px 0 var(--ink); }
+  .pressable:active:not(:disabled) { transform: translate(3px, 3px); box-shadow: 1px 1px 0 var(--ink); }
+
   /* ── 머리말 ── */
-  .hero {
-    position: relative;
-    display: flex; align-items: center; justify-content: center; flex-wrap: wrap;
-    gap: 10px 16px;
-    margin-bottom: 14px;
+  .hero { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; flex-wrap: wrap; }
+  .mascot {
+    width: 64px; height: 64px; flex: none;
+    display: grid; place-items: center;
+    font-size: 2.4rem;
+    background: var(--yellow); border: var(--line); border-radius: 20px; box-shadow: var(--sh);
+    transform: rotate(-6deg);
   }
-  .hero .tag {
-    padding: 8px 16px; border-radius: 999px;
-    background: rgba(255,255,255,.85);
-    font-size: 1.05rem; font-weight: 800; color: #0f766e;
-  }
-  .hero h1 {
-    margin: 0;
-    font-weight: 900;
-    font-size: clamp(2rem, 3.2vw, 2.9rem);
-    letter-spacing: -0.03em;
-  }
-  .hero h1 .hl {
-    color: #0f766e;
-    background: linear-gradient(transparent 62%, #fde68a 62%, #fde68a 92%, transparent 92%);
-    padding: 0 .08em;
-  }
+  .hero .titles { display: flex; flex-direction: column; gap: 2px; }
+  .eyebrow { font-size: .78rem; font-weight: 800; letter-spacing: .14em; color: var(--mustard); text-transform: uppercase; }
+  .hero h1 { margin: 0; font-size: clamp(1.8rem, 3vw, 2.4rem); font-weight: 900; letter-spacing: -0.03em; }
   .reset {
-    padding: 8px 14px; border-radius: 999px;
-    border: 2px solid rgba(255,255,255,.9);
-    background: rgba(255,255,255,.6);
-    font-size: .9rem; font-weight: 800; color: var(--ink-soft);
-  }
-  .reset:hover { background: #fff; }
-  @media (min-width: 1100px) {
-    .reset { position: absolute; right: 0; top: 50%; transform: translateY(-50%); }
+    margin-left: auto;
+    padding: 9px 16px; border-radius: 999px;
+    background: var(--yellow-soft);
+    font-size: .92rem; font-weight: 800;
   }
 
-  /* ── 단계 표시 ── */
-  .steps {
-    display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;
-    margin-bottom: 14px;
-  }
+  /* ── 단계 버튼 ── */
+  .steps { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 22px; }
   .steps button {
-    display: flex; align-items: center; gap: 8px;
-    padding: 10px 18px;
-    border-radius: 999px;
-    border: 2px solid transparent;
-    background: rgba(255,255,255,.6);
-    color: var(--ink-soft);
-    font-size: 1rem; font-weight: 800;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 13px 10px; border-radius: 16px;
+    font-size: 1rem; font-weight: 900;
   }
+  .steps button:nth-child(1) { background: var(--yellow); }
+  .steps button:nth-child(2) { background: var(--mint); }
+  .steps button:nth-child(3) { background: var(--teal); }
+  .steps button:nth-child(4) { background: var(--coral); color: #fff; }
+  .steps button:nth-child(5) { background: var(--yellow-soft); }
   .steps button .n {
     width: 26px; height: 26px; border-radius: 50%;
     display: grid; place-items: center;
-    background: #fff; font-size: .85rem;
+    background: #fff; border: 2px solid var(--ink); color: var(--ink);
+    font-size: .82rem;
   }
-  .steps button.on { background: #fff; border-color: #5eead4; color: #115e59; box-shadow: 0 6px 16px rgba(13,148,136,.2); }
-  .steps button.on .n { background: #0d9488; color: #fff; }
-  .steps button.done .n { background: #bbf7d0; color: var(--good-ink); }
-  .steps button:disabled { opacity: .55; }
-  .steps .lock { background: rgba(255,255,255,.4); }
+  .steps button.on { transform: translate(3px, 3px); box-shadow: 1px 1px 0 var(--ink); outline: 3px solid #fff; outline-offset: -6px; }
+  .steps button.done .n { background: var(--ink); color: #fff; }
+  .steps button:disabled { opacity: .45; box-shadow: none; }
 
   /* ── 카드 ── */
   .panel { display: none; }
   .panel.on { display: block; animation: fade .25s ease-out; }
   @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
-  .card {
-    background: var(--card);
-    border-radius: 28px;
-    box-shadow: var(--shadow);
-    padding: 24px 26px;
+  .card { background: var(--card); border: 3px solid var(--ink); border-radius: 28px; box-shadow: var(--sh-lg); overflow: hidden; }
+  .card-head {
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    padding: 22px 28px 18px;
+    border-bottom: var(--line);
   }
-  .card-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
-  .card-head h2 { margin: 0; font-size: 1.55rem; font-weight: 900; letter-spacing: -0.02em; }
+  .card-head h2 { margin: 4px 0 0; font-size: 1.55rem; font-weight: 900; letter-spacing: -0.02em; }
   .card-head p { margin: 4px 0 0; color: var(--ink-soft); font-size: 1rem; font-weight: 600; }
   .card-head .sp { flex: 1; }
+  .card-body { padding: 24px 28px 28px; }
 
   .big-btn {
     display: flex; align-items: center; justify-content: center; gap: 10px;
-    width: 100%;
-    margin-top: 16px;
-    padding: 17px;
-    border: none; border-radius: 18px;
-    font-size: 1.35rem; font-weight: 900;
-    color: #134e4a;
-    background: linear-gradient(90deg, #5eead4, #7dd3fc 55%, #fde68a);
-    box-shadow: 0 10px 24px rgba(45,212,191,.3);
-    transition: transform .12s, box-shadow .12s, opacity .2s;
+    width: 100%; margin-top: 20px; padding: 17px;
+    border-radius: 18px;
+    font-size: 1.3rem; font-weight: 900;
+    background: var(--coral); color: #fff;
   }
-  .big-btn:hover:not(:disabled) { transform: translateY(-2px); }
   .big-btn:disabled { opacity: .45; box-shadow: none; }
 
-  .ghost {
-    padding: 12px 18px; border-radius: 14px;
-    border: 2px solid var(--line); background: #fff;
-    color: var(--ink-soft); font-size: 1rem; font-weight: 800;
-  }
-  .ghost:hover { border-color: #5eead4; color: #115e59; }
+  .ghost { padding: 13px 18px; border-radius: 16px; background: #fff; font-size: 1rem; font-weight: 800; }
 
   /* ── 1. 단어 바구니 ── */
-  .baskets { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; }
-  .basket { border-radius: 22px; padding: 18px; border: 2px solid; display: flex; flex-direction: column; }
-  .basket.good { background: var(--good-bg); border-color: var(--good-line); }
-  .basket.bad { background: var(--bad-bg); border-color: var(--bad-line); }
-  .basket h3 { margin: 0 0 12px; font-size: 1.35rem; font-weight: 900; display: flex; align-items: center; gap: 8px; }
-  .basket.good h3 { color: var(--good-ink); }
-  .basket.bad h3 { color: var(--bad-ink); }
-  .basket h3 .cnt { margin-left: auto; font-size: .95rem; padding: 4px 12px; border-radius: 999px; background: #fff; }
+  .baskets { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; }
+  .basket { border-radius: 22px; padding: 18px; border: var(--line); box-shadow: var(--sh); display: flex; flex-direction: column; }
+  .basket.good { background: var(--mint); }
+  .basket.bad { background: var(--coral-soft); }
+  .basket h3 { margin: 0 0 12px; font-size: 1.3rem; font-weight: 900; display: flex; align-items: center; gap: 8px; }
+  .basket h3 .cnt { margin-left: auto; font-size: .9rem; padding: 4px 12px; border-radius: 999px; background: #fff; border: 2px solid var(--ink); }
 
-  .add { display: flex; gap: 8px; }
+  .add { display: flex; gap: 10px; }
   .add input {
     flex: 1; min-width: 0; width: 100%;
     font: inherit; font-size: 1.15rem; font-weight: 700;
-    padding: 12px 14px;
-    border-radius: 14px; border: 2px solid #fff; background: #fff; color: var(--ink);
+    padding: 12px 14px; border-radius: 14px;
+    border: var(--line); background: #fff; color: var(--ink);
   }
-  .add input::placeholder { color: #6f9aa2; font-weight: 600; }
-  .add input:focus { outline: none; border-color: #5eead4; }
-  .add button { padding: 0 20px; border: none; border-radius: 14px; font-size: 1.1rem; font-weight: 900; color: #fff; }
-  .good .add button { background: #22c55e; }
-  .bad .add button { background: #f43f5e; }
+  .add input::placeholder, .say input::placeholder, .qrow input::placeholder { color: #9aa1ae; font-weight: 600; }
+  input:focus { outline: none; box-shadow: inset 0 0 0 3px var(--yellow); }
+  .add button { padding: 0 20px; border-radius: 14px; font-size: 1.1rem; font-weight: 900; }
+  .good .add button { background: var(--teal); }
+  .bad .add button { background: var(--coral); color: #fff; }
 
-  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; min-height: 120px; align-content: flex-start; }
-  .chips .empty { color: var(--muted); font-weight: 600; font-size: .95rem; padding: 8px 4px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; min-height: 120px; align-content: flex-start; }
+  .chips .empty { color: var(--muted); font-weight: 700; font-size: .95rem; padding: 8px 2px; }
   .chip {
     display: inline-flex; align-items: center; gap: 6px;
-    padding: 8px 8px 8px 14px; border-radius: 999px;
-    background: #fff; font-size: 1.1rem; font-weight: 800;
+    padding: 7px 8px 7px 14px; border-radius: 999px;
+    background: #fff; border: 2px solid var(--ink); box-shadow: 2px 2px 0 var(--ink);
+    font-size: 1.1rem; font-weight: 800;
     animation: pop .2s ease-out;
   }
-  .good .chip { color: var(--good-ink); border: 2px solid var(--good-line); }
-  .bad .chip { color: var(--bad-ink); border: 2px solid var(--bad-line); }
-  .chip button {
-    width: 24px; height: 24px; border-radius: 50%; border: none;
-    background: rgba(0,0,0,.06); color: inherit; font-size: .8rem; font-weight: 900;
-  }
-  .chip button:hover { background: rgba(0,0,0,.14); }
+  .chip button { width: 24px; height: 24px; border-radius: 50%; border: none; background: var(--cream); font-size: .75rem; font-weight: 900; }
+  .chip button:hover { background: var(--coral); color: #fff; }
   @keyframes pop { from { transform: scale(.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
-  .hint { margin-top: 14px; }
-  .hint summary { cursor: pointer; font-weight: 800; color: var(--ink-soft); font-size: .95rem; }
+  .hint { margin-top: 18px; padding: 12px 16px; border-radius: 16px; background: var(--yellow-soft); border: 2px dashed var(--ink); }
+  .hint summary { cursor: pointer; font-weight: 800; }
   .hint p { margin: 8px 0 0; color: var(--ink-soft); font-size: .95rem; line-height: 1.7; }
 
   /* ── 2. 학습시키기 ── */
-  .train { text-align: center; padding: 10px 0 4px; }
-  .brain { font-size: 5rem; line-height: 1; display: inline-block; }
-  .brain.think { animation: think .6s ease-in-out infinite alternate; }
-  @keyframes think { from { transform: scale(1) rotate(-6deg); } to { transform: scale(1.12) rotate(6deg); } }
-  .train .sum { margin: 14px 0 4px; font-size: 1.3rem; font-weight: 800; }
-  .train .sum b.g { color: var(--good); }
-  .train .sum b.b { color: var(--bad); }
-  .train .msg { min-height: 1.6em; color: var(--ink-soft); font-weight: 700; font-size: 1.1rem; }
-  .bar { height: 22px; border-radius: 999px; background: var(--field); border: 2px solid var(--line); overflow: hidden; margin: 18px auto 0; max-width: 720px; }
-  .bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #5eead4, #7dd3fc, #fde68a); transition: width .2s; }
+  .train { text-align: center; padding: 6px 0 0; }
+  .brain {
+    width: 120px; height: 120px; display: inline-grid; place-items: center;
+    font-size: 4.4rem; line-height: 1;
+    background: var(--yellow); border: 3px solid var(--ink); border-radius: 32px; box-shadow: var(--sh-lg);
+  }
+  .brain.think { animation: think .5s ease-in-out infinite alternate; }
+  @keyframes think { from { transform: rotate(-7deg); } to { transform: rotate(7deg) scale(1.06); } }
+  .train .sum { margin: 22px 0 4px; font-size: 1.3rem; font-weight: 800; }
+  .train .sum b.g { color: var(--good-ink); background: var(--mint); padding: 0 6px; border-radius: 6px; }
+  .train .sum b.b { color: var(--bad-ink); background: var(--coral-soft); padding: 0 6px; border-radius: 6px; }
+  .train .msg { min-height: 1.6em; margin-top: 12px; color: var(--ink-soft); font-weight: 800; font-size: 1.1rem; }
+  .bar { height: 22px; border-radius: 999px; background: #f3ecd2; border: var(--line); overflow: hidden; margin: 18px auto 0; max-width: 720px; }
+  .bar i { display: block; height: 100%; width: 0; background: var(--yellow); border-right: 2.5px solid var(--ink); transition: width .25s; }
   .train .warn { margin-top: 12px; color: var(--bad-ink); font-weight: 800; }
 
   /* ── 3. 대화하기 ── */
   .chat {
-    height: min(52vh, 560px);
-    min-height: 280px;
+    height: min(50vh, 540px); min-height: 280px;
     overflow-y: auto;
-    padding: 6px 4px 6px;
-    display: flex; flex-direction: column; gap: 12px;
+    padding: 4px 6px 8px;
+    display: flex; flex-direction: column; gap: 14px;
   }
   .row { display: flex; gap: 10px; align-items: flex-end; max-width: 82%; }
   .row.me { align-self: flex-end; flex-direction: row-reverse; }
-  .ava { flex: none; width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; font-size: 1.6rem; background: var(--violet-soft); }
-  .me .ava { background: #dbeafe; }
+  .ava {
+    flex: none; width: 46px; height: 46px; border-radius: 14px;
+    display: grid; place-items: center; font-size: 1.5rem;
+    background: var(--yellow); border: 2px solid var(--ink); box-shadow: 2px 2px 0 var(--ink);
+  }
+  .me .ava { background: var(--teal); }
   .bubble {
-    padding: 13px 17px; border-radius: 20px;
+    padding: 13px 17px; border-radius: 18px;
     font-size: 1.2rem; font-weight: 700; line-height: 1.5;
-    background: #e6fffa; color: var(--ink);
-    border-bottom-left-radius: 6px;
+    background: var(--yellow-soft); color: var(--ink);
+    border: 2px solid var(--ink); box-shadow: 3px 3px 0 var(--ink);
+    border-bottom-left-radius: 4px;
     animation: pop .2s ease-out;
     white-space: pre-wrap; word-break: break-word;
   }
-  .me .bubble { background: #e0efff; border-bottom-left-radius: 20px; border-bottom-right-radius: 6px; }
-  .bubble.q { font-size: 1.3rem; font-weight: 800; }
-  .bubble.ok { background: var(--good-bg); border: 2px solid var(--good-line); color: var(--good-ink); }
-  .bubble.no { background: var(--bad-bg); border: 2px solid var(--bad-line); color: var(--bad-ink); }
-  .bubble.unk { background: #fff8e1; border: 2px solid #fde68a; color: #854d0e; }
+  .me .bubble { background: #fff; border-bottom-left-radius: 18px; border-bottom-right-radius: 4px; }
+  .bubble.q { font-size: 1.3rem; font-weight: 900; }
+  .bubble.ok { background: var(--mint); color: var(--good-ink); }
+  .bubble.no { background: var(--coral-soft); color: var(--bad-ink); }
+  .bubble.unk { background: #fff; color: var(--ink); border-style: dashed; }
   mark { padding: 0 3px; border-radius: 6px; }
-  mark.g { background: #bbf7d0; color: var(--good-ink); }
-  mark.b { background: #fecdd3; color: var(--bad-ink); }
-  .me .bubble.passed { box-shadow: 0 0 0 3px #86efac; }
-  .me .bubble.deleting { animation: shake .4s; text-decoration: line-through; text-decoration-color: var(--bad); text-decoration-thickness: 3px; }
-  .me .bubble.deleted { background: #eef6f5; color: #6f9aa2; font-weight: 700; font-size: 1.05rem; text-decoration: none; animation: fade .3s; }
+  mark.g { background: #b8ebc8; color: var(--good-ink); }
+  mark.b { background: #ffc3b5; color: var(--bad-ink); }
+  .me .bubble.passed { background: var(--mint); }
+  .me .bubble.deleting { animation: shake .4s; text-decoration: line-through; text-decoration-color: var(--coral); text-decoration-thickness: 3px; }
+  .me .bubble.deleted { background: #f1ede0; color: var(--muted); font-size: 1.05rem; border-style: dashed; box-shadow: none; text-decoration: none; animation: fade .3s; }
   @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
 
   .teach { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
   .teach input {
     font: inherit; font-size: 1.05rem; font-weight: 700;
-    padding: 9px 12px; border-radius: 12px; border: 2px solid #fde68a; background: #fff; color: var(--ink);
+    padding: 9px 12px; border-radius: 12px; border: 2px solid var(--ink); background: #fff; color: var(--ink);
     min-width: 0; width: 180px;
   }
-  .teach button { padding: 9px 14px; border-radius: 12px; border: none; font-size: 1rem; font-weight: 900; }
-  .teach .tg { background: #22c55e; color: #fff; }
-  .teach .tb { background: #f43f5e; color: #fff; }
-  .teach .ts { background: #fff; color: var(--ink-soft); border: 2px solid #fde68a; }
+  .teach button { padding: 9px 14px; border-radius: 12px; border: 2px solid var(--ink); box-shadow: 2px 2px 0 var(--ink); font-size: 1rem; font-weight: 900; }
+  .teach .tg { background: var(--teal); }
+  .teach .tb { background: var(--coral); color: #fff; }
+  .teach .ts { background: #fff; }
 
-  .say { display: flex; gap: 10px; margin-top: 14px; }
+  .say { display: flex; gap: 12px; margin-top: 18px; }
   .say input {
     flex: 1; min-width: 0;
     font: inherit; font-size: 1.25rem; font-weight: 700;
-    padding: 15px 18px; border-radius: 18px;
-    border: 2px solid #b9d8f7; background: #e6f3ff; color: var(--ink);
+    padding: 16px 18px; border-radius: 18px;
+    border: 3px solid var(--ink); background: #fff; color: var(--ink);
   }
-  .say input::placeholder { color: #5f8a93; font-weight: 600; }
-  .say input:focus { outline: none; border-color: #93c5fd; background: #fff; }
-  .say button {
-    padding: 0 28px; border-radius: 18px; border: none;
-    font-size: 1.25rem; font-weight: 900;
-    background: #bfdbfe; color: #1e3a8a;
-  }
-  .say button:disabled, .say input:disabled { opacity: .5; }
-  .progress { font-weight: 800; color: #115e59; background: var(--violet-soft); padding: 6px 14px; border-radius: 999px; }
+  .say button { padding: 0 30px; border-radius: 18px; font-size: 1.25rem; font-weight: 900; background: var(--coral); color: #fff; }
+  .say button:disabled, .say input:disabled { opacity: .5; box-shadow: none; }
+  .progress { font-weight: 900; padding: 7px 14px; border-radius: 999px; background: var(--yellow); border: 2px solid var(--ink); }
 
   /* ── 4. 결과 ── */
-  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-  .stat { border-radius: 20px; padding: 18px; text-align: center; border: 2px solid; }
-  .stat b { display: block; font-size: 2.6rem; font-weight: 900; line-height: 1.1; }
+  .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+  .stat { border-radius: 20px; padding: 18px; text-align: center; border: var(--line); box-shadow: var(--sh); }
+  .stat b { display: block; font-size: 2.8rem; font-weight: 900; line-height: 1.1; }
   .stat span { font-size: 1.05rem; font-weight: 800; }
-  .stat.s1 { background: var(--good-bg); border-color: var(--good-line); color: var(--good-ink); }
-  .stat.s2 { background: var(--bad-bg); border-color: var(--bad-line); color: var(--bad-ink); }
-  .stat.s3 { background: #fff8e1; border-color: #fde68a; color: #854d0e; }
+  .stat.s1 { background: var(--mint); }
+  .stat.s2 { background: var(--coral-soft); }
+  .stat.s3 { background: var(--yellow-soft); }
 
-  .log { margin-top: 18px; display: grid; gap: 8px; }
+  .log { margin-top: 20px; display: grid; gap: 10px; }
   .log-row {
     display: grid; grid-template-columns: 1.2fr 1fr auto; gap: 12px; align-items: center;
-    padding: 12px 16px; border-radius: 16px; background: var(--field); font-size: 1.05rem;
+    padding: 12px 16px; border-radius: 16px; background: #fffdf4; border: 2px solid var(--ink); font-size: 1.05rem;
   }
   .log-row .lq { color: var(--ink-soft); font-weight: 700; }
   .log-row .la { font-weight: 800; }
-  .badge { padding: 5px 12px; border-radius: 999px; font-weight: 900; font-size: .95rem; white-space: nowrap; }
-  .badge.ok { background: #bbf7d0; color: var(--good-ink); }
-  .badge.no { background: #fecdd3; color: var(--bad-ink); }
-  .badge.unk { background: #fde68a; color: #854d0e; }
+  .badge { padding: 5px 12px; border-radius: 999px; font-weight: 900; font-size: .92rem; white-space: nowrap; border: 2px solid var(--ink); }
+  .badge.ok { background: var(--mint); }
+  .badge.no { background: var(--coral); color: #fff; }
+  .badge.unk { background: var(--yellow); }
 
-  .think-box { margin-top: 18px; padding: 16px 20px; border-radius: 18px; background: #fff7ed; color: #7c2d12; line-height: 1.7; font-size: 1.05rem; }
+  .think-box { margin-top: 20px; padding: 16px 20px; border-radius: 18px; background: var(--yellow-soft); border: 2px dashed var(--ink); line-height: 1.7; font-size: 1.05rem; }
   .think-box h3 { margin: 0 0 4px; font-size: 1.1rem; }
   .think-box ul { margin: 0; padding-left: 22px; }
 
-  .actions { display: flex; gap: 12px; margin-top: 18px; flex-wrap: wrap; }
+  .actions { display: flex; gap: 14px; margin-top: 20px; flex-wrap: wrap; }
   .actions > * { flex: 1; min-width: 220px; margin-top: 0; }
 
   /* ── 질문 만들기 ── */
   .qlist { display: grid; gap: 10px; }
   .qrow { display: flex; gap: 10px; align-items: center; }
-  .qrow .qn { flex: none; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--violet-soft); color: #115e59; font-weight: 900; }
+  .qrow .qn { flex: none; width: 36px; height: 36px; border-radius: 12px; display: grid; place-items: center; background: var(--yellow); border: 2px solid var(--ink); font-weight: 900; }
   .qrow input {
     flex: 1; min-width: 0;
     font: inherit; font-size: 1.15rem; font-weight: 700;
     padding: 12px 14px; border-radius: 14px;
-    border: 2px solid #99f6e4; background: #e6fffa; color: var(--ink);
+    border: var(--line); background: #fff; color: var(--ink);
   }
-  .qrow input:focus { outline: none; border-color: #2dd4bf; background: #fff; }
-  .qrow button { flex: none; width: 44px; height: 44px; border-radius: 12px; border: 2px solid var(--line); background: #fff; font-size: 1.1rem; }
-  .qrow button:hover { border-color: var(--bad-line); background: var(--bad-bg); }
-  .qtools { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+  .qrow button { flex: none; width: 46px; height: 46px; border-radius: 12px; background: #fff; font-size: 1.1rem; }
+  .qtools { display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
 
   /* ── 안내 창 ── */
-  .modal {
-    position: fixed; inset: 0; z-index: 20;
-    display: grid; place-items: center; padding: 16px;
-    background: rgba(30,27,75,.45); backdrop-filter: blur(3px);
-  }
+  .modal { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 16px; background: rgba(38,48,66,.45); }
   .modal[hidden] { display: none; }
   .modal-card {
     width: min(480px, 100%);
-    background: #fff; border-radius: 28px;
-    padding: 32px 28px 24px; text-align: center;
-    box-shadow: 0 24px 60px rgba(30,27,75,.35);
-    border-top: 8px solid #fde68a;
+    background: #fff; border: 3px solid var(--ink); border-radius: 28px; box-shadow: 8px 8px 0 var(--ink);
+    padding: 30px 26px 24px; text-align: center;
     animation: pop .25s ease-out;
   }
-  .modal-card .emo { font-size: 3.4rem; line-height: 1; }
-  .modal-card h2 { margin: 12px 0 8px; font-size: 1.8rem; font-weight: 900; color: #115e59; }
+  .modal-card .emo {
+    width: 84px; height: 84px; margin: 0 auto; display: grid; place-items: center;
+    font-size: 2.8rem; line-height: 1;
+    background: var(--yellow); border: 2.5px solid var(--ink); border-radius: 24px; box-shadow: var(--sh);
+  }
+  .modal-card h2 { margin: 18px 0 8px; font-size: 1.7rem; font-weight: 900; }
   .modal-card p { margin: 0 0 22px; font-size: 1.15rem; font-weight: 700; line-height: 1.6; color: var(--ink-soft); }
-  .modal-card .row2 { display: flex; gap: 10px; }
-  .modal-card .row2 button { flex: 1; padding: 14px; border-radius: 16px; border: none; font-size: 1.15rem; font-weight: 900; }
-  .modal-card .ok { background: #99f6e4; color: #134e4a; }
-  .modal-card .cancel { background: #eef6f5; color: var(--ink-soft); }
+  .modal-card .row2 { display: flex; gap: 12px; }
+  .modal-card .row2 button { flex: 1; padding: 14px; border-radius: 16px; font-size: 1.15rem; font-weight: 900; }
+  .modal-card .ok { background: var(--coral); color: #fff; }
+  .modal-card .cancel { background: #fff; }
 
   .toast {
     position: fixed; bottom: 24px; left: 50%;
@@ -339,13 +306,17 @@
   }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+  @media (max-width: 900px) {
+    .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .steps button:last-child { grid-column: 1 / -1; }
+  }
   @media (max-width: 760px) {
     html { font-size: 16px; }
     .baskets, .stats { grid-template-columns: minmax(0, 1fr); }
-    .card { padding: 20px 16px; border-radius: 22px; }
+    .card-head, .card-body { padding-left: 16px; padding-right: 16px; }
     .row { max-width: 94%; }
     .log-row { grid-template-columns: 1fr; gap: 4px; }
-    .steps button { padding: 8px 12px; font-size: .9rem; }
+    .reset { margin-left: 0; }
   }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
@@ -353,19 +324,23 @@
 </style>
 </head>
 <body>
+<div class="page">
 
 <header class="hero">
-  <span class="tag">🧠 내가 가르치는 인공지능</span>
-  <h1>인공지능 <span class="hl">클린봇</span> 만들기 🤖</h1>
-  <button class="reset" id="reset" type="button">🔄 처음부터 다시</button>
+  <div class="mascot" aria-hidden="true">🤖</div>
+  <div class="titles">
+    <span class="eyebrow">AI CleanBot Lab</span>
+    <h1>인공지능 클린봇 만들기</h1>
+  </div>
+  <button class="reset pressable" id="reset" type="button">🔄 처음부터 다시</button>
 </header>
 
 <nav class="steps" id="steps">
-  <button data-go="words"><span class="n">1</span>단어 가르치기</button>
-  <button data-go="train"><span class="n">2</span>학습시키기</button>
-  <button data-go="chat"><span class="n">3</span>대화하기</button>
-  <button data-go="result"><span class="n">4</span>결과 보기</button>
-  <button data-go="questions" class="lock" id="qTab"><span class="n">🔒</span>질문 만들기</button>
+  <button class="pressable" data-go="words"><span class="n">1</span>단어 가르치기</button>
+  <button class="pressable" data-go="train"><span class="n">2</span>학습시키기</button>
+  <button class="pressable" data-go="chat"><span class="n">3</span>대화하기</button>
+  <button class="pressable" data-go="result"><span class="n">4</span>결과 보기</button>
+  <button class="pressable lock" data-go="questions" id="qTab"><span class="n">🔒</span>질문 만들기</button>
 </nav>
 
 <!-- 1. 단어 가르치기 -->
@@ -373,16 +348,18 @@
   <div class="card">
     <div class="card-head">
       <div>
+        <span class="eyebrow">Step 1 · Teach Words</span>
         <h2>1. 클린봇에게 단어 가르치기</h2>
         <p>처음 클린봇은 아무것도 몰라요. 착한 말과 나쁜 말을 바구니에 넣어 주세요.</p>
       </div>
     </div>
+    <div class="card-body">
     <div class="baskets">
       <div class="basket good">
         <h3>😊 착한 말 바구니 <span class="cnt" id="goodCnt">0개</span></h3>
         <form class="add" data-kind="good">
           <input type="text" maxlength="15" placeholder="착한 말을 써 보세요" aria-label="착한 말">
-          <button type="submit">넣기</button>
+          <button type="submit" class="pressable">넣기</button>
         </form>
         <div class="chips" id="goodChips"></div>
       </div>
@@ -390,7 +367,7 @@
         <h3>😠 나쁜 말 바구니 <span class="cnt" id="badCnt">0개</span></h3>
         <form class="add" data-kind="bad">
           <input type="text" maxlength="15" placeholder="나쁜 말을 써 보세요" aria-label="나쁜 말">
-          <button type="submit">넣기</button>
+          <button type="submit" class="pressable">넣기</button>
         </form>
         <div class="chips" id="badChips"></div>
       </div>
@@ -400,7 +377,8 @@
       <p>클린봇이 할 질문을 떠올려 보세요. "요즘 학교생활 어떠니?", "오늘 급식 맛은 어땠어?" 같은 질문에 친구들이 뭐라고 대답할까요?<br>
       그 대답 속에 들어 있는 <b>착한 말</b>과 <b>나쁜 말</b>을 바구니에 넣으면 돼요.</p>
     </details>
-    <button class="big-btn" id="toTrain">다음: 학습시키러 가기 👉</button>
+    <button class="big-btn pressable" id="toTrain">다음: 학습시키러 가기 👉</button>
+    </div>
   </div>
 </section>
 
@@ -409,10 +387,12 @@
   <div class="card">
     <div class="card-head">
       <div>
+        <span class="eyebrow">Step 2 · Training</span>
         <h2>2. 클린봇 학습시키기</h2>
         <p>바구니의 단어로 클린봇을 학습시켜요. 학습한 단어로만 착한 말과 나쁜 말을 구별해요.</p>
       </div>
     </div>
+    <div class="card-body">
     <div class="train">
       <div class="brain" id="brain">🤖</div>
       <div class="sum" id="trainSum"></div>
@@ -420,7 +400,8 @@
       <div class="msg" id="trainMsg"></div>
       <div class="warn" id="trainWarn"></div>
     </div>
-    <button class="big-btn" id="trainBtn">🧠 학습시키기</button>
+    <button class="big-btn pressable" id="trainBtn">🧠 학습시키기</button>
+    </div>
   </div>
 </section>
 
@@ -429,17 +410,20 @@
   <div class="card">
     <div class="card-head">
       <div>
+        <span class="eyebrow">Step 3 · Talk</span>
         <h2>3. 클린봇과 대화하기</h2>
         <p>클린봇의 질문에 대답해 보세요. 클린봇이 착한 말인지 나쁜 말인지 판단해요.</p>
       </div>
       <span class="sp"></span>
       <span class="progress" id="progress"></span>
     </div>
+    <div class="card-body">
     <div class="chat" id="chat" aria-live="polite"></div>
     <form class="say" id="say">
       <input type="text" id="answer" maxlength="60" placeholder="대답을 써 보세요" autocomplete="off" aria-label="대답">
-      <button type="submit" id="sendBtn">보내기</button>
+      <button type="submit" id="sendBtn" class="pressable">보내기</button>
     </form>
+    </div>
   </div>
 </section>
 
@@ -448,10 +432,12 @@
   <div class="card">
     <div class="card-head">
       <div>
+        <span class="eyebrow">Step 4 · Result</span>
         <h2>4. 결과 보기</h2>
         <p id="resultSub">클린봇이 대답을 어떻게 판단했는지 살펴봐요.</p>
       </div>
     </div>
+    <div class="card-body">
     <div class="stats">
       <div class="stat s1"><b id="nOk">0</b><span>✅ 통과 (착한 말)</span></div>
       <div class="stat s2"><b id="nNo">0</b><span>🚨 삭제 (나쁜 말)</span></div>
@@ -467,9 +453,10 @@
       </ul>
     </div>
     <div class="actions">
-      <button class="ghost" id="again">🔁 같은 질문으로 다시 대화하기</button>
-      <button class="ghost" id="moreWords">📝 단어 더 가르치기</button>
-      <button class="big-btn" id="toQuestions">✏️ 질문 직접 만들기</button>
+      <button class="ghost pressable" id="again">🔁 같은 질문으로 다시 대화하기</button>
+      <button class="ghost pressable" id="moreWords">📝 단어 더 가르치기</button>
+      <button class="big-btn pressable" id="toQuestions">✏️ 질문 직접 만들기</button>
+    </div>
     </div>
   </div>
 </section>
@@ -479,21 +466,26 @@
   <div class="card">
     <div class="card-head">
       <div>
+        <span class="eyebrow">Bonus · My Questions</span>
         <h2>✏️ 나만의 질문 만들기</h2>
         <p>클린봇이 할 질문을 고치거나 새로 만들어 보세요. 질문에 맞는 단어도 바구니에 꼭 가르쳐 주세요!</p>
       </div>
     </div>
+    <div class="card-body">
     <div class="qlist" id="qlist"></div>
     <div class="qtools">
-      <button class="ghost" id="addQ">➕ 질문 추가하기</button>
-      <button class="ghost" id="resetQ">↩️ 기본 질문으로 되돌리기</button>
+      <button class="ghost pressable" id="addQ">➕ 질문 추가하기</button>
+      <button class="ghost pressable" id="resetQ">↩️ 기본 질문으로 되돌리기</button>
     </div>
     <div class="actions">
-      <button class="ghost" id="qWords">📝 질문에 맞는 단어 가르치기</button>
-      <button class="big-btn" id="qStart">💬 내 질문으로 대화하기</button>
+      <button class="ghost pressable" id="qWords">📝 질문에 맞는 단어 가르치기</button>
+      <button class="big-btn pressable" id="qStart">💬 내 질문으로 대화하기</button>
+    </div>
     </div>
   </div>
 </section>
+
+</div>
 
 <div class="modal" id="modal" hidden>
   <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="mTitle">
@@ -501,8 +493,8 @@
     <h2 id="mTitle"></h2>
     <p id="mText"></p>
     <div class="row2">
-      <button class="cancel" id="mCancel">취소</button>
-      <button class="ok" id="mOk">확인</button>
+      <button class="cancel pressable" id="mCancel">취소</button>
+      <button class="ok pressable" id="mOk">확인</button>
     </div>
   </div>
 </div>
@@ -919,7 +911,7 @@
       row.className = 'qrow';
       row.innerHTML = `<span class="qn">${i + 1}</span>
         <input type="text" maxlength="50" value="${esc(q)}" placeholder="클린봇이 할 질문을 써 보세요" aria-label="${i + 1}번 질문">
-        <button type="button" title="질문 지우기" aria-label="${i + 1}번 질문 지우기">🗑️</button>`;
+        <button type="button" class="pressable" title="질문 지우기" aria-label="${i + 1}번 질문 지우기">🗑️</button>`;
       row.querySelector('input').addEventListener('input', e => { S.questions[i] = e.target.value; save(); });
       row.querySelector('button').addEventListener('click', () => {
         if (S.questions.length <= 1) return toast('질문은 한 개 이상 있어야 해요');
