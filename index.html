@@ -250,6 +250,8 @@
   .bubble.ok { background: var(--mint); color: var(--good-ink); }
   .bubble.no { background: var(--coral-soft); color: var(--bad-ink); }
   .bubble.unk { background: #fff; color: var(--ink); border-style: dashed; }
+  .bubble.retry { background: var(--teal-soft); }
+  .bubble.fixed { background: var(--teal); color: var(--ink); }
   mark { padding: 0 3px; border-radius: 6px; }
   mark.g { background: #b8ebc8; color: var(--good-ink); }
   mark.b { background: #ffc3b5; color: var(--bad-ink); }
@@ -281,13 +283,14 @@
   .progress { font-weight: 900; padding: 7px 14px; border-radius: 999px; background: var(--yellow); border: 2px solid var(--ink); }
 
   /* ── 4. 결과 ── */
-  .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+  .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
   .stat { border-radius: 20px; padding: 18px; text-align: center; border: var(--line); box-shadow: var(--sh); }
   .stat b { display: block; font-size: 2.8rem; font-weight: 900; line-height: 1.1; }
   .stat span { font-size: 1.05rem; font-weight: 800; }
   .stat.s1 { background: var(--mint); }
   .stat.s2 { background: var(--coral-soft); }
   .stat.s3 { background: var(--yellow-soft); }
+  .stat.s4 { background: var(--teal-soft); }
 
   .log { margin-top: 20px; display: grid; gap: 10px; }
   .log-row {
@@ -300,6 +303,8 @@
   .badge.ok { background: var(--mint); }
   .badge.no { background: var(--coral); color: #fff; }
   .badge.unk { background: var(--yellow); }
+  .badge.fix { background: var(--teal); }
+  .fix-to { margin-left: 8px; font-weight: 900; color: var(--good-ink); }
 
   .think-box { margin-top: 20px; padding: 16px 20px; border-radius: 18px; background: var(--yellow-soft); border: 2px dashed var(--ink); line-height: 1.7; font-size: 1.05rem; }
   .think-box h3 { margin: 0 0 4px; font-size: 1.1rem; }
@@ -405,7 +410,8 @@
   }
   @media (max-width: 760px) {
     html { font-size: 16px; }
-    .baskets, .stats { grid-template-columns: minmax(0, 1fr); }
+    .baskets { grid-template-columns: minmax(0, 1fr); }
+    .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .grow { flex-direction: column; text-align: center; }
     .hint-cols, .hint-col ul { grid-template-columns: minmax(0, 1fr); }
     .grow-top { justify-content: center; }
@@ -580,6 +586,7 @@
       <div class="stat s1"><b id="nOk">0</b><span>✅ 통과 (착한 말)</span></div>
       <div class="stat s2"><b id="nNo">0</b><span>🚨 삭제 (나쁜 말)</span></div>
       <div class="stat s3"><b id="nUnk">0</b><span>🤔 모르는 말</span></div>
+      <div class="stat s4"><b id="nFix">0</b><span>🌱 고쳐 말하기 성공</span></div>
     </div>
     <div class="log" id="log"></div>
     <div class="compare" id="compare" hidden>
@@ -591,6 +598,7 @@
       <ul>
         <li>클린봇이 <b>잘못 판단한</b> 대답이 있었나요? 왜 그렇게 판단했을까요?</li>
         <li>클린봇이 <b>모르는 말</b>이라고 한 대답은 왜 몰랐을까요?</li>
+        <li>삭제된 말을 <b>착한 말로 바꿔 말했을 때</b> 상대의 기분은 어떻게 달라질까요?</li>
         <li>엄마·선생님·친구의 <b>잔소리는 나쁜 말</b>일까요? 그 말 속에는 어떤 마음이 담겨 있을까요?</li>
         <li>친구의 클린봇은 같은 대답을 다르게 판단할까요? 왜 그럴까요?</li>
       </ul>
@@ -1063,6 +1071,10 @@
       if (l.verdict === 'no') bubble('me', '🧹 클린봇이 삭제한 대답이에요', 'deleted');
       else bubble('me', highlight(l.a, l.bad, l.good), l.verdict === 'ok' ? 'passed' : '');
       bubble('bot', resultText(l), l.verdict);
+      if (l.fixed) {
+        bubble('me', highlight(l.fixed.a, [], l.fixed.good), 'passed');
+        bubble('bot', fixedText(l.fixed), 'ok fixed');
+      }
     });
     nextQuestion(true);
   }
@@ -1086,11 +1098,49 @@
     setInput(true);
   }
 
+  // 다시 말하기 중에는 입력창의 대답을 이 함수가 받아요
+  let waiter = null;
+  function askAnswer(placeholder) {
+    return new Promise(resolve => {
+      waiter = resolve;
+      $('answer').placeholder = placeholder;
+      setInput(true);
+    });
+  }
+
+  async function deleteBubble(mine) {
+    await wait(900);
+    mine.classList.add('deleting');
+    await wait(900);
+    mine.className = 'bubble deleted';
+    mine.textContent = '🧹 클린봇이 삭제한 대답이에요';
+  }
+
+  // 클린봇이 고를 수 있는 버튼을 보여 주고, 누른 버튼의 key를 돌려줘요
+  function choose(text, options) {
+    return new Promise(resolve => {
+      const b = bubble('bot', '', 'retry');
+      b.innerHTML = `${text}<div class="teach">${options.map(([k, label, cls]) => `<button type="button" class="${cls}" data-k="${k}">${label}</button>`).join('')}</div>`;
+      chat.scrollTop = chat.scrollHeight;
+      b.querySelectorAll('button').forEach(btn => btn.addEventListener('click', () => {
+        b.innerHTML = text;
+        resolve(btn.dataset.k);
+      }));
+      b.querySelector('button').focus();
+    });
+  }
+
   $('say').addEventListener('submit', async e => {
     e.preventDefault();
-    if (busy) return;
     const a = $('answer').value.trim();
     if (!a) { $('answer').focus(); return; }
+    if (waiter) {
+      const w = waiter; waiter = null;
+      $('answer').value = '';
+      setInput(false);
+      return w(a);
+    }
+    if (busy) return;
     busy = true;
     setInput(false);
     $('answer').value = '';
@@ -1102,11 +1152,8 @@
 
     if (j.verdict === 'no') {
       bubble('bot', resultText(l), 'no');
-      await wait(900);
-      mine.classList.add('deleting');
-      await wait(900);
-      mine.className = 'bubble deleted';
-      mine.textContent = '🧹 클린봇이 삭제한 대답이에요';
+      await deleteBubble(mine);
+      await retryLoop(l);
     } else if (j.verdict === 'ok') {
       mine.classList.add('passed');
       bubble('bot', resultText(l), 'ok');
@@ -1114,12 +1161,52 @@
       l.taught = await teachUnknown(a);
       if (l.taught) chat.lastElementChild.querySelector('.bubble').innerHTML = resultText(l);
     }
+    $('answer').placeholder = '대답을 써 보세요';
     r.log.push(l);
     r.i++;
     save();
     busy = false;
     nextQuestion();
   });
+
+  // 🔁 다시 말하기: 나쁜 말이 삭제되면 착한 말로 바꿔 말할 기회를 줘요
+  async function retryLoop(l) {
+    while (true) {
+      const go = await choose('✏️ 착한 말로 바꿔서 다시 말해 볼래요?', [
+        ['retry', '✏️ 다시 말하기', 'tg'],
+        ['skip', '➡️ 다음 질문으로', 'ts'],
+      ]);
+      if (go !== 'retry') return;
+      const a2 = await askAnswer('착한 말로 바꿔서 다시 말해 보세요');
+      const j2 = judge(a2);
+      const mine2 = bubble('me', highlight(a2, j2.bad, j2.good));
+      await wait(600);
+      if (j2.verdict === 'ok') {
+        mine2.classList.add('passed');
+        l.fixed = { a: a2, good: j2.good };
+        bubble('bot', fixedText(l.fixed), 'ok fixed');
+        return;
+      }
+      if (j2.verdict === 'no') {
+        bubble('bot', `🚨 아직 나쁜 말이 있어요. (${j2.bad.map(w => `'${esc(w)}'`).join(', ')} 발견)\n클린봇이 삭제합니다.`, 'no');
+        await deleteBubble(mine2);
+        continue;
+      }
+      // 모르는 말이면 가르쳐 달라고 해요
+      const t = await teachUnknown(a2);
+      if (!t) return;
+      if (t.kind === 'good') {
+        l.fixed = { a: a2, good: [t.word] };
+        chat.lastElementChild.querySelector('.bubble').innerHTML = `'${esc(t.word)}'을(를) 착한 말로 새로 배웠어요!\n` + fixedText(l.fixed);
+        chat.lastElementChild.querySelector('.bubble').classList.add('ok', 'fixed');
+        mine2.classList.add('passed');
+        return;
+      }
+      chat.lastElementChild.querySelector('.bubble').innerHTML = `'${esc(t.word)}'을(를) 나쁜 말로 배웠어요. 이것도 나쁜 말이라 삭제할게요.`;
+      await deleteBubble(mine2);
+    }
+  }
+  const fixedText = f => `🌱 착한 말로 바꿨어요! (${f.good.map(w => `'${esc(w)}'`).join(', ')} 발견)\n정말 멋져요! 클린봇이 통과시켜요.`;
 
   // 모르는 말이면 그 자리에서 물어보고 배우기
   function teachUnknown(answer) {
@@ -1198,11 +1285,12 @@
     $('nOk').textContent = count(log, 'ok');
     $('nNo').textContent = count(log, 'no');
     $('nUnk').textContent = count(log, 'unk');
+    $('nFix').textContent = log.filter(l => l.fixed).length;
     $('log').innerHTML = log.map(l => `
       <div class="log-row">
         <span class="lq">${P.emoji} ${esc(l.q)}</span>
-        <span class="la">🙋 ${highlight(l.a, l.bad, l.good)}</span>
-        <span class="badge ${l.verdict}">${{ ok: '✅ 통과', no: '🚨 삭제', unk: '🤔 모르는 말' }[l.verdict]}</span>
+        <span class="la">🙋 ${highlight(l.a, l.bad, l.good)}${l.fixed ? `<span class="fix-to">→ 🌱 ${highlight(l.fixed.a, [], l.fixed.good)}</span>` : ''}</span>
+        <span class="badge ${l.fixed ? 'fix' : l.verdict}">${l.fixed ? '🌱 고쳐 말함' : { ok: '✅ 통과', no: '🚨 삭제', unk: '🤔 모르는 말' }[l.verdict]}</span>
       </div>`).join('');
     // 두 명 이상과 대화했으면 비교해 보기
     const played = ORDER.filter(p => S.results[p]);
@@ -1211,7 +1299,7 @@
       const R = S.results[p], Q = PARTNERS[p];
       return `<div class="cmp ${R ? '' : 'none'}">
         <div class="ce">${Q.emoji}</div><span class="cn">${Q.name}</span>
-        <div class="cb">${R ? `🚨 나쁜 말 <b>${count(R, 'no')}</b>번 · ✅ ${count(R, 'ok')}번` : '아직 대화 안 함'}</div>
+        <div class="cb">${R ? `🚨 나쁜 말 <b>${count(R, 'no')}</b>번 · ✅ ${count(R, 'ok')}번<br>🌱 고쳐 말하기 ${R.filter(l => l.fixed).length}번` : '아직 대화 안 함'}</div>
       </div>`;
     }).join('');
   }
