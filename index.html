@@ -66,15 +66,14 @@
   .reset {
     margin-left: auto;
     display: flex; align-items: center; gap: 10px;
-    padding: 12px 22px 12px 14px; border-radius: 18px;
+    padding: 8px 26px 8px 10px; border-radius: 18px;
     background: var(--coral); color: #fff;
-    font-size: 1.1rem; font-weight: 900; text-align: left; line-height: 1.2;
+    font-size: 2rem; font-weight: 900; line-height: 1; letter-spacing: .02em;
   }
   .reset .ri {
-    width: 40px; height: 40px; flex: none; display: grid; place-items: center;
-    font-size: 1.4rem; background: #fff; border: 2px solid var(--ink); border-radius: 12px;
+    width: 46px; height: 46px; flex: none; display: grid; place-items: center;
+    font-size: 1.5rem; background: #fff; border: 2px solid var(--ink); border-radius: 12px;
   }
-  .reset small { display: block; font-size: .78rem; font-weight: 700; opacity: .92; }
 
   /* ── 단계 버튼 ── */
   .steps { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 22px; }
@@ -86,7 +85,7 @@
   .steps button:nth-child(1) { background: var(--yellow); }
   .steps button:nth-child(2) { background: var(--mint); }
   .steps button:nth-child(3) { background: var(--teal); }
-  .steps button:nth-child(4) { background: var(--coral); color: #fff; }
+  .steps button:nth-child(4) { background: #a8d5f7; }
   .steps button:nth-child(5) { background: var(--yellow-soft); }
   .steps button .n {
     width: 26px; height: 26px; border-radius: 50%;
@@ -431,7 +430,7 @@
     <span class="eyebrow">AI CleanBot Lab</span>
     <h1>인공지능 클린봇 만들기</h1>
   </div>
-  <button class="reset pressable" id="reset" type="button"><span class="ri">🔄</span><span>처음부터 다시<small>다음 친구가 쓸 때 눌러 주세요</small></span></button>
+  <button class="reset pressable" id="reset" type="button"><span class="ri">🔄</span>리셋</button>
 </header>
 
 <nav class="steps" id="steps">
@@ -1277,9 +1276,9 @@
   $('reset').addEventListener('click', async () => {
     if (busy) return;
     const ok = await ask({
-      emo: '🔄', title: '처음부터 다시 할까요?',
-      text: '바구니의 단어, 학습한 내용, 내가 만든 질문, 대화 결과가 <b>모두 지워져요.</b><br>다음 친구가 쓸 때 눌러 주세요.',
-      ok: '모두 지우기', cancel: '취소',
+      emo: '🔄', title: '리셋할까요?',
+      text: '바구니의 단어, 학습한 내용, 내가 만든 질문, 대화 결과가 <b>모두 지워지고</b> 처음 상태로 돌아가요.',
+      ok: '리셋하기', cancel: '취소',
     });
     if (!ok) return;
     S = fresh();
